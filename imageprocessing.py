@@ -1,3 +1,6 @@
+import sys
+sys.path.append(r"c:\users\ruth\appdata\local\packages\pythonsoftwarefoundation.python.3.12_qbz5n2kfra8p0\localcache\local-packages\python312\site-packages")  # Replace with your actual path
+
 import cv2
 import numpy as np
 
@@ -70,7 +73,7 @@ def enhance_image(image_path):
     enhanced_img = cv2.cvtColor(lab_img, cv2.COLOR_LAB2RGB)
     return enhanced_img
 # Usage
-image_path = "Users\Ruth\Downloads\turbid.png"  # Replace with your image path
+image_path = r"C:\Users\Ruth\Downloads\turbid.png"  # Replace with your image path
 enhanced_img = enhance_image(image_path)
 # Display the original and enhanced images
 cv2.imshow("Enhanced Image", enhanced_img)
