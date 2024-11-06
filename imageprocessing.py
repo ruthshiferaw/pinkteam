@@ -79,7 +79,10 @@ def enhance_image(image_path):
 # image_path = r"C:\Users\Ruth\Downloads\turbid.png"  # Replace with your image path
 
 # for Taylor:
-image_path = r"C:\Users\tgfox\OneDrive\Documents\Turbid_Water\Turbid1.png"
+#image_path = r"C:\Users\tgfox\OneDrive\Documents\Turbid_Water\Turbid1.png"
+
+#for Corrina
+image_path = r"C:\Users\corri\Downloads\Welding_edited.png"
 
 enhanced_img = enhance_image(image_path)
 # Display the original and enhanced images
