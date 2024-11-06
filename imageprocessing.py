@@ -82,7 +82,7 @@ def enhance_image(img):
 #image_path = r"C:\Users\tgfox\OneDrive\Documents\Turbid_Water\Turbid1.png"
 
 #for Corrina
-image_path = r"C:\Users\corri\Downloads\Welding_edited.png"
+image_path = r"C:\Users\corri\OneDrive\Documents\GitHub\pinkteam\Sample Images\Turbid1.png"
 image = cv2.imread(image_path)
 
 if __name__=="__main__":
