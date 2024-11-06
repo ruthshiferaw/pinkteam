@@ -1,5 +1,6 @@
-import sys
-sys.path.append(r"c:\users\ruth\appdata\local\packages\pythonsoftwarefoundation.python.3.12_qbz5n2kfra8p0\localcache\local-packages\python312\site-packages")  # Replace with your actual path
+# # Ruth, uncomment these next two lines:
+# import sys
+# sys.path.append(r"c:\users\ruth\appdata\local\packages\pythonsoftwarefoundation.python.3.12_qbz5n2kfra8p0\localcache\local-packages\python312\site-packages")  # Replace with your actual path
 
 import cv2
 import numpy as np
@@ -72,8 +73,17 @@ def enhance_image(image_path):
     lab_img = cv2.merge((l, a, b))
     enhanced_img = cv2.cvtColor(lab_img, cv2.COLOR_LAB2RGB)
     return enhanced_img
+
 # Usage
-image_path = r"C:\Users\Ruth\Downloads\turbid.png"  # Replace with your image path
+# # for Ruth:
+# image_path = r"C:\Users\Ruth\Downloads\turbid.png"  # Replace with your image path
+
+# for Taylor:
+#image_path = r"C:\Users\tgfox\OneDrive\Documents\Turbid_Water\Turbid1.png"
+
+#for Corrina
+image_path = r"C:\Users\corri\Downloads\Welding_edited.png"
+
 enhanced_img = enhance_image(image_path)
 # Display the original and enhanced images
 cv2.imshow("Enhanced Image", enhanced_img)
