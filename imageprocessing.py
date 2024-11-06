@@ -85,8 +85,9 @@ def enhance_image(img):
 image_path = r"C:\Users\corri\Downloads\Welding_edited.png"
 image = cv2.imread(image_path)
 
-enhanced_img = enhance_image(image)
-# Display the original and enhanced images
-cv2.imshow("Enhanced Image", enhanced_img)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+if __name__=="__main__":
+    enhanced_img = enhance_image(image)
+    # Display the original and enhanced images
+    cv2.imshow("Enhanced Image", enhanced_img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
