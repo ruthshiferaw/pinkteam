@@ -2,6 +2,8 @@
 
 imageprocessing.py
 
+please put all photos in "sample images" so we can individually run the code without having to continuously change file paths
+
 turbidity.m
 
 # Turbidity Detection of Sample Images using the Principles of Scattering and Image Processing
