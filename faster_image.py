@@ -51,7 +51,6 @@ def enhance_image(img):
         J = (img - A) / t[:, :, None] + A
         return np.clip(J, 0, 255).astype(np.uint8)
 
-    
     dark_channel = dark_channel_prior(img)
 
     A = atmospheric_light(img, dark_channel)
@@ -73,8 +72,8 @@ def enhance_image(img):
 
     return enhanced_img
 
-#for Corrina
-image_path = r"C:\Users\corri\Downloads\Welding_edited.png"
+# replace the user with your GitHub username
+image_path = r"C:\Users\tgfox\OneDrive\Documents\GitHub\pinkteam\Sample Images\Turbid1.png"
 image = cv2.imread(image_path)
 if __name__ == "__main__":
     enhanced_img = enhance_image(image)
