@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from numba import jit  # Optional: If using Numba for acceleration
+#from numba import jit  # Optional: If using Numba for acceleration
 
 def enhance_image(img):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -75,9 +75,9 @@ def enhance_image(img):
 #for Corrina
 image_path = r"C:\Users\corri\Downloads\Welding_edited.png"
 image = cv2.imread(image_path)
-
-enhanced_img = enhance_image(image)
-# Display the original and enhanced images
-cv2.imshow("Enhanced Image", enhanced_img)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+if __name__ == "__main__":
+    enhanced_img = enhance_image(image)
+    # Display the original and enhanced images
+    cv2.imshow("Enhanced Image", enhanced_img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
