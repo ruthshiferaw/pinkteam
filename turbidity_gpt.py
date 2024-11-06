@@ -1,6 +1,6 @@
 # # Ruth, uncomment these next two lines:
-import sys
-sys.path.append(r"c:\users\ruth\appdata\local\packages\pythonsoftwarefoundation.python.3.12_qbz5n2kfra8p0\localcache\local-packages\python312\site-packages")  # Replace with your actual path
+# import sys
+# sys.path.append(r"c:\users\ruth\appdata\local\packages\pythonsoftwarefoundation.python.3.12_qbz5n2kfra8p0\localcache\local-packages\python312\site-packages")  # Replace with your actual path
 
 import cv2
 import numpy as np
@@ -27,7 +27,7 @@ def calculate_uiqm(image):
     return uiqm
 
 # Load an underwater image
-image_path = r"C:\Users\Ruth\Downloads\turbid fixed.png" #turbid fixed
+image_path = "Sample Images/verydark.jpg"
 image = cv2.imread(image_path)
 
 # Calculate UIQM score

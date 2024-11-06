@@ -8,6 +8,8 @@ turbidity.m
 
 # Turbidity Detection of Sample Images using the Principles of Scattering and Image Processing
 
+results in NTU (Nephelometric Turbidity Unit)
+
 ## Introduction-
 
 This project intends to give an alternative of expensive and sophisticated conventional Turbidity Meters. In this, I have used the principle of Scattering and Image Processing to
@@ -26,7 +28,7 @@ Sample Image used-
 Output-
 ![Capture](https://user-images.githubusercontent.com/53121012/119776351-703f1200-bee2-11eb-9277-847f7b6160d1.PNG)
 
-turbidity_gpt.py
+turbidity_gpt.py (chatgpt converted matlab to python bc had difficulty running)
 The Underwater Image Quality Measure (UIQM) mentioned in REAL-TIME ENHANCEMENT OF VISUAL CLARITY IN TURBID WATERS FOR COMMERCIAL DIVERS AND ROVS is an objective metric designed to evaluate the visual quality of underwater images. UIQM provides a numerical score assessing the image's information content, specifically focusing on three key aspects:
 
 Color Faithfulness: This component evaluates how closely the colors in the image match expected natural colors, which is crucial since underwater images often suffer from color distortions due to light absorption and scattering.
