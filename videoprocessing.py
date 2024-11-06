@@ -3,7 +3,7 @@
 
 import cv2
 import numpy as np
-import imageprocessing as proc
+import faster_image as proc
 
 def process_video(input_video_path, output_video_path):
     # Open the input video
@@ -20,7 +20,6 @@ def process_video(input_video_path, output_video_path):
     
     # Define the codec and create VideoWriter object
     fourcc = cv2.VideoWriter_fourcc(*'XVID')  # You can change the codec if needed
-
     out = cv2.VideoWriter(output_video_path, fourcc, fps, (width, height), isColor=True)
     
     if not out.isOpened():
@@ -46,7 +45,7 @@ def process_video(input_video_path, output_video_path):
     print(f"Video saved to {output_video_path}")
 
 # Example usage
-input_video_path = r"C:\Users\corri\Videos\Discovery\Vision_Test.mp4"   # Provide the path to your input video file
-output_video_path = r"C:\Users\corri\Videos\Discovery\Result.mp4" # Output video path
+input_video_path = r"C:\Users\corri\Videos\Discovery\Vision_Test1.mp4"   # Provide the path to your input video file
+output_video_path = r"C:\Users\corri\Videos\Discovery\Result1.mp4" # Output video path
 
 process_video(input_video_path, output_video_path)
