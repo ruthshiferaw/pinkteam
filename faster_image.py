@@ -52,14 +52,10 @@ def enhance_image(img):
         return np.clip(J, 0, 255).astype(np.uint8)
 
     dark_channel = dark_channel_prior(img)
-
     A = atmospheric_light(img, dark_channel)
-
     transmission = estimate_transmission(img, A)
-
     gray_img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY) / 255.0
     transmission_refined = guided_filter(gray_img, transmission)
-
     recovered_img = recover_scene(img, A, transmission_refined)
 
     # CLAHE Enhancement
