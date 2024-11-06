@@ -16,8 +16,6 @@ def enhance_image(img):
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (patch_size, patch_size))
         return cv2.erode(dark_channel, kernel)
 
-    dark_channel = dark_channel_prior(img)
-
     # Atmospheric Light Calculation
     def atmospheric_light(img, dark_channel):
         flat_img = img.reshape(-1, 3)
@@ -27,15 +25,11 @@ def enhance_image(img):
         A = np.mean(flat_img[indices], axis=0)
         return A
 
-    A = atmospheric_light(img, dark_channel)
-
     # Transmission Estimation
     def estimate_transmission(img, A, omega=0.95):
         norm_img = img / A
         dark_channel = dark_channel_prior(norm_img)
         return 1 - omega * dark_channel
-
-    transmission = estimate_transmission(img, A)
 
     # Soft Matting (Guided Filtering)
     def guided_filter(I, p, radius=60, epsilon=1e-3):
@@ -51,14 +45,21 @@ def enhance_image(img):
         mean_b = cv2.boxFilter(b, cv2.CV_64F, (radius, radius))
         return mean_a * I + mean_b
 
-    gray_img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY) / 255.0
-    transmission_refined = guided_filter(gray_img, transmission)
-
     # Scene Radiance Recovery
     def recover_scene(img, A, t, t0=0.1):
         t = np.maximum(t, t0)
         J = (img - A) / t[:, :, None] + A
         return np.clip(J, 0, 255).astype(np.uint8)
+
+    
+    dark_channel = dark_channel_prior(img)
+
+    A = atmospheric_light(img, dark_channel)
+
+    transmission = estimate_transmission(img, A)
+
+    gray_img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY) / 255.0
+    transmission_refined = guided_filter(gray_img, transmission)
 
     recovered_img = recover_scene(img, A, transmission_refined)
 
