@@ -5,9 +5,9 @@
 import cv2
 import numpy as np
 
-def enhance_image(image_path):
+def enhance_image(img):
     # Step 1: Read and Preprocess the Image
-    img = cv2.imread(image_path)
+    #img = cv2.imread(image_path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # Convert from BGR to RGB
     # Step 2: White Balance Adjustment
     def white_balance(img):
@@ -83,8 +83,9 @@ def enhance_image(image_path):
 
 #for Corrina
 image_path = r"C:\Users\corri\Downloads\Welding_edited.png"
+image = cv2.imread(image_path)
 
-enhanced_img = enhance_image(image_path)
+enhanced_img = enhance_image(image)
 # Display the original and enhanced images
 cv2.imshow("Enhanced Image", enhanced_img)
 cv2.waitKey(0)
