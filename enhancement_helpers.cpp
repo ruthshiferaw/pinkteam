@@ -1,13 +1,9 @@
 #include "enhancement_helpers.hpp"
 
 void applyLUT(cv::Mat& frame, const std::string& lutPath) {
-    // Load the LUT from file (assumes a 3D LUT in a .CUBE format)
-    cv::Mat lut = cv::imread(lutPath, cv::IMREAD_UNCHANGED);
-    if (lut.empty()) {
-        std::cerr << "Error: Could not load LUT from " << lutPath << std::endl;
-        return;
-    }
-    cv::LUT(frame, lut, frame);
+    // Simple placeholder for LUT loading; .CUBE file parsing must be implemented.
+    // You can replace this with actual 3D LUT parsing code.
+    std::cerr << "LUT application needs a proper .CUBE parsing implementation." << std::endl;
 }
 
 void applyCLAHE(cv::Mat& frame) {

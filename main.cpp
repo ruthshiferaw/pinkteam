@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
     std::string videoPath = argv[1];
     cv::VideoCapture cap(videoPath);
     if (!cap.isOpened()) {
-        std::cerr << "Error: Could not open video." << std::endl;
+        std::cerr << "Error: Could not open video: " << videoPath << std::endl;
         return -1;
     }
 
@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
     bool useTemporalSmoothing = true;
     bool useFastFilters = true;
 
-    cv::Mat prevFrame, currentFrame, nextFrame, smoothedFrame;
+    cv::Mat prevFrame, currentFrame, smoothedFrame;
     int frameCount = 0;
     auto startOverall = std::chrono::high_resolution_clock::now();
 
@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
 
         auto start = std::chrono::high_resolution_clock::now();
         if (useLUT) {
-            applyLUT(currentFrame, "lut_file_path.cube");
+            applyLUT(currentFrame, "path/to/your/lut_file.cube");
         }
         auto end = std::chrono::high_resolution_clock::now();
         std::cout << "LUT Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
