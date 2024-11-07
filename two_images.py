@@ -16,7 +16,7 @@ def create_side_by_side(img1, img2):
 if __name__ == "__main__":
     # Replace these paths with your actual image paths or use images already loaded in memory
     original_image = cv2.imread(r"C:\Users\tgfox\OneDrive\Documents\GitHub\pinkteam\Sample Images\Turbid2.png")  # Replace with your original image path
-    enhanced_image = proc.enhance_image(original_image)  # Assuming enhance_image is defined as in your code
+    enhanced_image = enhance_image(original_image)  # Assuming enhance_image is defined as in your code
 
     # Create side-by-side comparison image
     comparison_image = create_side_by_side(original_image, enhanced_image)
