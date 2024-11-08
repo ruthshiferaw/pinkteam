@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import time
 
 def apply_LUT(frame, lut_path):
     lut, lut_size = load_cube_lut(lut_path)
@@ -68,12 +69,17 @@ def apply_fast_filters(frame):
     return cv2.bilateralFilter(frame, 9, 75, 75)
 
 def enhance_image(img, white_balance=True, apply_dehazing=True, apply_clahe=True, apply_fast_filters_flag=True, lut_path=None):
+    timings = {}  # Dictionary to store timing for each function
+    
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     if white_balance:
+        start_time = time.time()
         img = apply_white_balance(img)
+        timings['white_balance'] = round((time.time() - start_time) * 1000, 2)  # in ms
 
     if apply_dehazing:
+        start_time = time.time()
         def dark_channel_prior(img, patch_size=15):
             dark_channel = cv2.min(cv2.min(img[:, :, 0], img[:, :, 1]), img[:, :, 2])
             kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (patch_size, patch_size))
@@ -122,14 +128,21 @@ def enhance_image(img, white_balance=True, apply_dehazing=True, apply_clahe=True
             return np.clip(J, 0, 255).astype(np.uint8)
 
         img = recover_scene(img, A, transmission_refined)
+        timings['dehazing'] = round((time.time() - start_time) * 1000, 2)
 
     if apply_clahe:
+        start_time = time.time()
         img = apply_CLAHE(img)
+        timings['clahe'] = round((time.time() - start_time) * 1000, 2)
 
     if lut_path:
+        start_time = time.time()
         img = apply_LUT(img, lut_path)
+        timings['lut'] = round((time.time() - start_time) * 1000, 2)
 
     if apply_fast_filters_flag:
+        start_time = time.time()
         img = apply_fast_filters(img)
+        timings['fast_filters'] = round((time.time() - start_time) * 1000, 2)
 
-    return img
+    return img, timings
