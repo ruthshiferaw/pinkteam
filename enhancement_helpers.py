@@ -84,6 +84,10 @@ def enhance_image(img, white_balance=True, apply_dehazing=True, apply_clahe=True
             dark_channel = cv2.min(cv2.min(img[:, :, 0], img[:, :, 1]), img[:, :, 2])
             kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (patch_size, patch_size))
             return cv2.erode(dark_channel, kernel)
+        # def dark_channel_prior(img, patch_size=15): # Calculate dark channel using NumPy 
+        #     dark_channel = np.min(img, axis=2) 
+        #     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (patch_size, patch_size)) 
+        #     return cv2.erode(dark_channel, kernel)
 
         dark_channel = dark_channel_prior(img)
 
