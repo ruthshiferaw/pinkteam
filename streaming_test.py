@@ -2,42 +2,99 @@ import cv2
 import numpy as np
 import threading
 
-class camThread(threading.Thread):
-    def __init__(self, previewName, camID):
-        threading.Thread.__init__(self)
-        self.previewName = previewName
-        self.camID = camID
-        #self.frame = None  #still figuring this out
-    def run(self):
-        print("Starting " + self.previewName)
-        camPreview(self.previewName, self.camID)
-
-def camPreview(previewName, camID):
-    cv2.namedWindow(previewName)
-    cam = cv2.VideoCapture(camID, cv2.CAP_GSTREAMER)
-    if cam.isOpened():  # try to get the first frame
-        rval, frame = cam.read()
-    else:
-        rval = False
-
-    while rval:
-        cv2.imshow(previewName, frame)
-        rval, frame = cam.read()
-        key = cv2.waitKey(20)
-        if key == 27:  # exit on ESC
-            break
-    cv2.destroyWindow(previewName)
+# Global variables to store frames from both cameras
+frame1 = None
+frame2 = None
 
 cam1 = "v4l2src device=/dev/video0 ! videoconvert ! appsink"
 cam2 = "v4l2src device=/dev/video4 ! videoconvert ! appsink"
+# #try lower quality
+#cam1 = "v4l2src device=/dev/video0 ! video/x-raw, framerate=30/1, width=800, height=450 ! videoconvert ! appsink"
+#cam2 = "v4l2src device=/dev/video4 ! video/x-raw, framerate=30/1, width=800, height=450 ! videoconvert ! appsink"
 
-# Create two threads as follows
-thread1 = camThread("Camera 1", cam1)
-thread2 = camThread("Camera 2", cam2)
+# Lock objects to safely update frames from different threads
+frame1_lock = threading.Lock()
+frame2_lock = threading.Lock()
+
+def capture_camera1():
+    global frame1
+    cap1 = cv2.VideoCapture(cam1)  # Camera 1 (usually /dev/video0)
+    if not cap1.isOpened():
+        print("Error: Could not open camera 1.")
+        return
+    
+    while True:
+        ret1, f1 = cap1.read()
+        if ret1:
+            with frame1_lock:
+                frame1 = f1
+        else:
+            print("Error: Failed to capture frame from camera 1.")
+            break
+
+    cap1.release()
+
+def capture_camera2():
+    global frame2
+    cap2 = cv2.VideoCapture(cam2)  # Camera 2 (usually /dev/video1)
+    if not cap2.isOpened():
+        print("Error: Could not open camera 2.")
+        return
+    
+    while True:
+        ret2, f2 = cap2.read()
+        if ret2:
+            with frame2_lock:
+                frame2 = f2
+        else:
+            print("Error: Failed to capture frame from camera 2.")
+            break
+
+    cap2.release()
+
+def display():
+    global frame1, frame2
+
+    while True:
+        # Wait until both frames are available
+        with frame1_lock, frame2_lock:
+            if frame1 is not None and frame2 is not None:
+                # Resize frames to match in size (optional but recommended for a better side-by-side display)
+                height1, width1 = frame1.shape[:2]
+                height2, width2 = frame2.shape[:2]
+
+                # Resize second frame to match the first frame's size (if needed)
+                if height1 != height2 or width1 != width2:
+                    frame2 = cv2.resize(frame2, (width1, height1))
+
+                # Concatenate the frames side by side (horizontally)
+                concatenated = np.hstack((frame1, frame2))
+
+                # Display the concatenated image
+                cv2.imshow('Two Cameras Side by Side', concatenated)
+
+        # Exit the loop if 'q' is pressed
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cv2.destroyAllWindows()
+
+# Create and start the camera threads
+thread1 = threading.Thread(target=capture_camera1)
+thread2 = threading.Thread(target=capture_camera2)
+
+# Start threads
 thread1.start()
 thread2.start()
 
-#find a way to horizontally concatenate frames
+# Start the display function in the main thread
+display()
+
+# Wait for both threads to finish
+thread1.join()
+thread2.join()
+
+#OLD CODE
 
 # cap1 = cv2.VideoCapture(cam1, cv2.CAP_GSTREAMER)
 # cap2 = cv2.VideoCapture(cam2, cv2.CAP_GSTREAMER)
