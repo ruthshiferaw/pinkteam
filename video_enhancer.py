@@ -99,7 +99,7 @@ if __name__ == "__main__":
     lut_path = "LUTs/Underwater v1_1.GX014035.cube"  # Replace with your LUT file path
     # DONT INCLUDE lut_path IN THE HEADER IF YOU DON'T WANT TO USE LUT FILTER
     # VERY SLOW
-    main(video_path, optimization_note="dark_channel_patch_size=7", csv_note="ruth") #optimization_note="no_clahe", apply_clahe=False
+    main(video_path, optimization_note="downscaled", csv_note="ruth") #optimization_note="no_clahe", apply_clahe=False
     #optimization_note indicates modifications: appended to end of video name saved in "Enhanced Videos"
     #csv_note indicates whose pc it's run on, added to "enhanced_video_details.csv"
 
