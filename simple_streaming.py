@@ -15,7 +15,7 @@ import numpy as np
 cap = cv2.VideoCapture(1, cv2.CAP_MSMF)
 
 if not cap.isOpened():
-    print('Error could not open webcam 1')
+    print('Error could not open webcam. Change the port number')
     exit()
 
 while True:
