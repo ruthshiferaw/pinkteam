@@ -12,7 +12,7 @@ import numpy as np
 #         cap.release()
 
 
-cap = cv2.VideoCapture(2, cv2.CAP_MSMF)
+cap = cv2.VideoCapture(1, cv2.CAP_MSMF)
 
 if not cap.isOpened():
     print('Error could not open webcam 1')
