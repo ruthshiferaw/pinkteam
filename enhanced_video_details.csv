@@ -16,5 +16,25 @@ Vision_Test_2s,597.44,dark_channel_numpy,ruth
 Vision_Test_33s,712.44,dark_channel_numpy,ruth
 Vision_Test_2s,665.16,dark_channel_patch_size=7,ruth
 Vision_Test_33s,665.2,dark_channel_patch_size=7,ruth
-Vision_Test_2s,481.51,downscaled,ruth
+Vision_Test_2s,481.51,downscaled,ruth #numpy is a given after this
 Vision_Test_33s,519.02,downscaled,ruth
+Vision_Test_2s,431.91,downscaled+no_fast_filter,ruth
+Vision_Test_33s,467.04,downscaled+no_fast_filter,ruth
+Vision_Test_2s,393.32,downscaled+no_fast_filter+no_clahe,ruth
+Vision_Test_33s,415.12,downscaled+no_fast_filter+no_clahe,ruth
+Vision_Test_2s,414.07,single_downscaled+no_fast_filter+no_clahe,ruth
+Vision_Test_33s,416.73,single_downscaled+no_fast_filter+no_clahe,ruth
+Vision_Test_2s,304.12,single_downscaled+no_fast_filter+no_clahe+no_white_balance,ruth
+Vision_Test_33s,323.87,single_downscaled+no_fast_filter+no_clahe+no_white_balance,ruth
+Vision_Test_33s,379.55,single_downscaled+no_fast_filter+no_clahe+no_white_balance,ruth
+Vision_Test_2s,304.54,single_downscaled+no_fast_filter+no_clahe+no_white_balance,ruth
+Vision_Test_33s,361.19,single_downscaled+no_fast_filter+no_clahe+no_white_balance,ruth
+Vision_Test_2s,493.21,single_downscaled+no_fast_filter+no_clahe,ruth
+Vision_Test_33s,486.75,single_downscaled+no_fast_filter+no_clahe,ruth
+Vision_Test_2s,422.81,single_downscaled+no_fast_filter+no_clahe,ruth
+Vision_Test_2s,320.72,single_downscaled+no_fast_filter+no_clahe,ruth
+Vision_Test_33s,344.33,single_downscaled+no_fast_filter+no_clahe,ruth
+Vision_Test_2s,226.96,single_downscaled+no_fast_filter+no_clahe+no_white_balance,ruth
+Vision_Test_33s,253.66,single_downscaled+no_fast_filter+no_clahe+no_white_balance,ruth #FINAL CHOICE
+Vision_Test_33s,358.9,single_downscaled+no_fast_filter,ruth
+Vision_Test_2s,339.6,single_downscaled+no_fast_filter,ruth
