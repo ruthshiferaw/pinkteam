@@ -1,0 +1,20 @@
+Video Name,Average Time per Frame (ms),Optimization Note,Whose PC
+Vision_Test_2s,531.65,,ruth
+Vision_Test_33s,566.22,,ruth
+Vision_Test_2s,510.32,no_clahe,ruth
+Vision_Test_33s,586.22,no_clahe,ruth
+Vision_Test_2s,536.45,"clahe_tileGridSize=(16, 16)",ruth
+Vision_Test_33s,607.32,"clahe_tileGridSize=(16, 16)",ruth
+Vision_Test_2s,488.89,no_fast_filters,ruth #forgot to change grid size back to 8
+Vision_Test_33s,797.63,no_fast_filters,ruth #forgot to change grid size back to 8 and was on chatgpt at same time...
+Vision_Test_33s,563.11,no_fast_filters,ruth #forgot to change grid size back to 8
+Vision_Test_2s,687.55,no_fast_filters,ruth
+Vision_Test_33s,650.83,no_fast_filters,ruth
+Vision_Test_2s,607.4,dark_channel_numpy,ruth #forgot to change grid size back to 8
+Vision_Test_33s,647.59,dark_channel_numpy,ruth #forgot to change grid size back to 8
+Vision_Test_2s,597.44,dark_channel_numpy,ruth
+Vision_Test_33s,712.44,dark_channel_numpy,ruth
+Vision_Test_2s,665.16,dark_channel_patch_size=7,ruth
+Vision_Test_33s,665.2,dark_channel_patch_size=7,ruth
+Vision_Test_2s,481.51,downscaled,ruth
+Vision_Test_33s,519.02,downscaled,ruth

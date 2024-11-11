@@ -80,10 +80,27 @@ def enhance_image(img, white_balance=True, apply_dehazing=True, apply_clahe=True
 
     if apply_dehazing:
         start_time = time.time()
-        def dark_channel_prior(img, patch_size=15):
-            dark_channel = cv2.min(cv2.min(img[:, :, 0], img[:, :, 1]), img[:, :, 2])
+        # def dark_channel_prior(img, patch_size=15):
+        #     dark_channel = cv2.min(cv2.min(img[:, :, 0], img[:, :, 1]), img[:, :, 2])
+        #     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (patch_size, patch_size))
+        #     return cv2.erode(dark_channel, kernel)
+        # def dark_channel_prior(img, patch_size=15): # Calculate dark channel using NumPy 
+        #     dark_channel = np.min(img, axis=2) 
+        #     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (patch_size, patch_size)) 
+        #     return cv2.erode(dark_channel, kernel)
+        
+        def dark_channel_prior(img, patch_size=15, scale_factor=0.5):
+            # Downscale the image
+            small_img = cv2.resize(img, (0, 0), fx=scale_factor, fy=scale_factor)
+
+            # Calculate dark channel on the smaller image
+            dark_channel = np.min(small_img, axis=2) 
             kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (patch_size, patch_size))
-            return cv2.erode(dark_channel, kernel)
+            dark_channel = cv2.erode(dark_channel, kernel)
+
+            # Upscale dark channel back to original size
+            return cv2.resize(dark_channel, (img.shape[1], img.shape[0]))
+
 
         dark_channel = dark_channel_prior(img)
 
@@ -97,11 +114,15 @@ def enhance_image(img, white_balance=True, apply_dehazing=True, apply_clahe=True
 
         A = atmospheric_light(img, dark_channel)
 
-        def estimate_transmission(img, A, omega=0.95):
-            norm_img = img / A
-            dark_channel = dark_channel_prior(norm_img)
+        def estimate_transmission(img, A, omega=0.95, scale_factor=0.5):
+            # norm_img = img / A
+            
+            # Downscale the image
+            small_img = cv2.resize(img, (0, 0), fx=scale_factor, fy=scale_factor)
+            dark_channel = dark_channel_prior(small_img/A)
             transmission = 1 - omega * dark_channel
-            return transmission
+            return cv2.resize(transmission, (img.shape[1], img.shape[0]))
+        
 
         transmission = estimate_transmission(img, A)
 
@@ -124,8 +145,8 @@ def enhance_image(img, white_balance=True, apply_dehazing=True, apply_clahe=True
 
         def recover_scene(img, A, t, t0=0.1):
             t = np.maximum(t, t0)
-            J = (img - A) / t[:, :, None] + A
-            return np.clip(J, 0, 255).astype(np.uint8)
+            img = (img - A) / t[:, :, None] + A
+            return np.clip(img, 0, 255).astype(np.uint8)
 
         img = recover_scene(img, A, transmission_refined)
         timings['dehazing'] = round((time.time() - start_time) * 1000, 2)
