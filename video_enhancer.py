@@ -14,7 +14,6 @@ def main(video_path, lut_path=None, output_path="Enhanced Videos", optimization_
         print(f"Error: Could not open video: {video_path}")
         return
     
-
     # Extract the original video name and define the enhanced video path
     original_name = os.path.splitext(os.path.basename(video_path))[0]
     # Build the enhanced video file name with optional note
@@ -96,13 +95,10 @@ def save_to_csv(video_name, avg_time_per_frame, optimization_note, csv_note):
 
 if __name__ == "__main__":
     video_path = "Sample Videos/Vision_Test_2s.mp4"  # Replace with your video file path
-    lut_path = "LUTs/Underwater v1_1.GX014035.cube"  # Replace with your LUT file path
-    # DONT INCLUDE lut_path IN THE HEADER IF YOU DON'T WANT TO USE LUT FILTER
-    # VERY SLOW
-    main(video_path, optimization_note="single_downscaled+no_fast_filter", csv_note="ruth", apply_fast_filters_flag=False, apply_clahe=True, white_balance=True) #optimization_note="no_clahe", apply_clahe=False, +no_clahe+no_white_balance
+
+    main(video_path, optimization_note="single_downscaled+no_fast_filter+no_clahe+no_white_balance", csv_note="ruth", apply_fast_filters_flag=False, apply_clahe=False, white_balance=False)
     #optimization_note indicates modifications: appended to end of video name saved in "Enhanced Videos"
     #csv_note indicates whose pc it's run on, added to "enhanced_video_details.csv"
 
-    #DON'T DO OTHER WORK WHILE RUNNING CODE IT AFFECTS PROCESSING TIME
     #goal = 50-20ms on personal laptop, 100ms on pi
-    #30 second video = ~1008 frames total
+    #33s video ~1008 frames total

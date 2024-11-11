@@ -10,56 +10,6 @@ def upscale_image(img, target_shape):
     """Upscales an image back to a target shape."""
     return cv2.resize(img, (target_shape[1], target_shape[0]), interpolation=cv2.INTER_LINEAR)
 
-def apply_LUT(frame, lut_path):
-    lut, lut_size = load_cube_lut(lut_path)
-    if lut_size == 0:
-        print(f"Error: Failed to load LUT from {lut_path}")
-        return frame
-
-    normalized_frame = frame.astype(np.float32) / 255.0
-    output_frame = np.zeros_like(normalized_frame)
-
-    for i in range(normalized_frame.shape[0]):
-        for j in range(normalized_frame.shape[1]):
-            r, g, b = normalized_frame[i, j]
-            r_idx = int(r * (lut_size - 1))
-            g_idx = int(g * (lut_size - 1))
-            b_idx = int(b * (lut_size - 1))
-            output_frame[i, j] = lut[r_idx, g_idx, b_idx]
-
-    # Convert back to uint8 format
-    output_frame = np.clip(output_frame * 255, 0, 255).astype(np.uint8)
-    return output_frame
-
-def load_cube_lut(file_path):
-    with open(file_path, 'r') as f:
-        lines = f.readlines()
-
-    lut_size = 0
-    lut_data = []
-
-    for line in lines:
-        line = line.strip()
-        if line.startswith('#') or line == '':
-            continue
-        if 'LUT_3D_SIZE' in line:
-            lut_size = int(line.split()[-1])
-            lut_data = []
-            continue
-        if 'DOMAIN_MIN' in line or 'DOMAIN_MAX' in line:
-            continue
-
-        if lut_size > 0 and len(line.split()) == 3:
-            r, g, b = map(float, line.split())
-            lut_data.append([r, g, b])
-
-    lut_data = np.array(lut_data, dtype=np.float32)
-    if lut_data.shape[0] != lut_size ** 3:
-        raise ValueError("LUT data size mismatch. Check the .CUBE file format.")
-
-    lut = lut_data.reshape((lut_size, lut_size, lut_size, 3))
-    return lut, lut_size
-
 def apply_CLAHE(frame):
     lab_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
     l, a, b = cv2.split(lab_frame)
@@ -145,7 +95,7 @@ def dehaze_image(img, scale_factor=0.5, patch_size=15):
 
     return recovered_img
 
-def enhance_image(img, white_balance=True, apply_dehazing=True, apply_clahe=True, apply_fast_filters_flag=True, lut_path=None):
+def enhance_image(img, white_balance=True, apply_dehazing=True, apply_clahe=True, apply_fast_filters_flag=True):
     timings = {}  # Dictionary to store timing for each function
     
     # Ensure the image is in uint8 RGB format at the beginning
@@ -165,11 +115,6 @@ def enhance_image(img, white_balance=True, apply_dehazing=True, apply_clahe=True
         start_time = time.time()
         img = apply_CLAHE(img)
         timings['clahe'] = round((time.time() - start_time) * 1000, 2)
-
-    if lut_path:
-        start_time = time.time()
-        img = apply_LUT(img, lut_path)
-        timings['lut'] = round((time.time() - start_time) * 1000, 2)
 
     if apply_fast_filters_flag:
         start_time = time.time()
