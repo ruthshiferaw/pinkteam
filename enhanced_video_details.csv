@@ -40,3 +40,7 @@ Vision_Test_33s,358.9,single_downscaled+no_fast_filter,ruth
 Vision_Test_2s,339.6,single_downscaled+no_fast_filter,ruth
 Vision_Test_2s,215.13,single_downscaled+no_fast_filter+no_clahe+no_white_balance,ruth
 Vision_Test_33s,222.71,single_downscaled+no_fast_filter+no_clahe+no_white_balance,ruth
+Vision_Test_2s,237.03,single_downscaled+no_fast_filter+no_white_balance,ruth
+Vision_Test_33s,241.18,single_downscaled+no_fast_filter+no_white_balance,ruth
+Vision_Test_33s,241.19,changing_clahe_values1,ruth
+Vision_Test_33s,249.16,changing_clahe_values2,ruth

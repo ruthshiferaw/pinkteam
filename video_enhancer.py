@@ -96,7 +96,7 @@ def save_to_csv(video_name, avg_time_per_frame, optimization_note, csv_note):
 if __name__ == "__main__":
     video_path = "Sample Videos/Vision_Test_33s.mp4"  # Replace with your video file path
 
-    main(video_path, optimization_note="single_downscaled+no_fast_filter+no_clahe+no_white_balance", csv_note="ruth", apply_fast_filters_flag=False, apply_clahe=False, white_balance=False)
+    main(video_path, optimization_note="final version", csv_note="ruth", apply_fast_filters_flag=False, apply_clahe=False, white_balance=False) #single_downscaled+no_fast_filter+no_clahe+no_white_balance
     #optimization_note indicates modifications: appended to end of video name saved in "Enhanced Videos"
     #csv_note indicates whose pc it's run on, added to "enhanced_video_details.csv"
 
