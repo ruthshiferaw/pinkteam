@@ -8,7 +8,7 @@ import time
 import pandas as pd
 from enhancement_helpers import enhance_image
 
-def main(video_path, lut_path=None, output_path="Enhanced Videos", optimization_note="", csv_note="", white_balance=True, apply_dehazing=True, apply_clahe=True, apply_fast_filters_flag=True):
+def main(video_path, output_path="Enhanced Videos", optimization_note="", csv_note="", white_balance=True, apply_dehazing=True, apply_clahe=True, apply_fast_filters_flag=True):
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         print(f"Error: Could not open video: {video_path}")
@@ -44,7 +44,7 @@ def main(video_path, lut_path=None, output_path="Enhanced Videos", optimization_
 
         frame_start_time = time.time()
 
-        current_frame, timings = enhance_image(current_frame, white_balance, apply_dehazing, apply_clahe, apply_fast_filters_flag, lut_path)
+        current_frame, timings = enhance_image(current_frame, white_balance, apply_dehazing, apply_clahe, apply_fast_filters_flag)
 
         frame_end_time = time.time()
         frame_processing_time = round((frame_end_time - frame_start_time) * 1000, 2)
@@ -94,7 +94,7 @@ def save_to_csv(video_name, avg_time_per_frame, optimization_note, csv_note):
     print(f"Details saved to {csv_path}")
 
 if __name__ == "__main__":
-    video_path = "Sample Videos/Vision_Test_2s.mp4"  # Replace with your video file path
+    video_path = "Sample Videos/Vision_Test_33s.mp4"  # Replace with your video file path
 
     main(video_path, optimization_note="single_downscaled+no_fast_filter+no_clahe+no_white_balance", csv_note="ruth", apply_fast_filters_flag=False, apply_clahe=False, white_balance=False)
     #optimization_note indicates modifications: appended to end of video name saved in "Enhanced Videos"
