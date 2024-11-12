@@ -9,19 +9,18 @@
         "-g",
         "${workspaceFolder}/enhancement_helpers.cpp",
         "-o",
-        "${workspaceFolder}/enhancement_helpers",
+        "${workspaceFolder}/enhancement_helpers.h",
 
         // Include path for OpenCV headers
         "-I",
-        "C:/opencv/build/include", // Path to the OpenCV headers
+        "C:/Users/Ruth/opencv/build/include",
 
-        // Linker flags to link with OpenCV libraries
+        // Library path for OpenCV libs
         "-L",
-        "C:/Users/Ruth/AppData/Local/Packages/PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0/LocalCache/local-packages/Python312/site-packages", //"C:/opencv/build/x64/vc15/lib", // Path to OpenCV libraries
-        "-lopencv_core460", // Link to OpenCV core module
-        "-lopencv_imgcodecs460", // Link to OpenCV image codecs
-        "-lopencv_highgui460", // Link to OpenCV highgui module
-        "-lopencv_imgproc460" // Link to OpenCV image processing module
+        "C:/Users/Ruth/opencv/build/x64/vc15/lib",
+
+        // Link to the OpenCV world library
+        "-lopencv_world4100"
       ],
       "group": {
         "kind": "build",
