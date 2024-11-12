@@ -2,17 +2,13 @@ import cv2
 import numpy as np
 import threading
 import queue
+import time
 import enhancement_helpers as enhance
 
-# Global queues to store frames from both cameras
-frame_queue = queue.Queue(maxsize=10)  # Limit size to avoid memory overload
-
-goal_dims = (1280, 1440)
-square = (1200)
 
 # Capture and put frames in queue
 def capture_camera(camera_index, frame_queue):
-    print(f"Camera {camera_index} started")
+    print(f"Camera {camera_index} started", time.time())
     cap = cv2.VideoCapture(camera_index, cv2.CAP_DSHOW)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
@@ -27,6 +23,7 @@ def capture_camera(camera_index, frame_queue):
             if frame_queue.full():
                 frame_queue.get()  # Remove oldest frame if queue is full
             frame_queue.put(frame)  # Insert new frame
+            time.sleep(1.0/30)
         else:
             print(f"Error: Failed to capture frame from camera {camera_index}.")
             break
@@ -51,7 +48,8 @@ def processing_and_display(frame_queue1, frame_queue2):
             right_side = cv2.copyMakeBorder(sq2, 112, 112, 64, 0, cv2.BORDER_CONSTANT, value=(0, 0, 0))
             concatenated = np.hstack((left_side, right_side))
 
-            # Perform enhancement if needed
+            # time.sleep(0.02)
+            # # Perform enhancement if needed
             # concatenated, timing = enhance.enhance_image(concatenated)
 
             # Display the concatenated image
@@ -63,8 +61,8 @@ def processing_and_display(frame_queue1, frame_queue2):
     cv2.destroyAllWindows()
 
 # Create and start the camera threads
-frame_queue1 = queue.Queue(maxsize=10)
-frame_queue2 = queue.Queue(maxsize=10)
+frame_queue1 = queue.Queue(maxsize=20)
+frame_queue2 = queue.Queue(maxsize=20)
 thread1 = threading.Thread(target=capture_camera, args=(1, frame_queue1))
 thread2 = threading.Thread(target=capture_camera, args=(2, frame_queue2))
 
