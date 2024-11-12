@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import threading
+import enhancement_helpers as enhance
 import time
 
 # Global variables to store frames from both cameras
@@ -62,28 +63,39 @@ def capture_camera2():
 
     cap2.release()
 
+def processing(f1, f2):
+    # crop the images to be square
+    sq1 = f1[0:1080, 420:1500]
+    sq1 = cv2.resize(sq1, (1216,1216))
+    sq2 = f2[0:1080, 420:1500]
+    sq2 = cv2.resize(sq2, (1216,1216))
+
+
+    # add padding to get correct spacing
+    left_side = cv2.copyMakeBorder(sq1, 112, 112, 0, 64, cv2.BORDER_CONSTANT, value=(0, 0, 0))
+    right_side = cv2.copyMakeBorder(sq2, 112, 112, 64, 0, cv2.BORDER_CONSTANT, value=(0, 0, 0))
+    
+    # Concatenate the frames side by side (horizontally)
+    concatenated = np.hstack((left_side, right_side))
+
+    # do frame precessing here !!!
+    #concatenated, timing = enhance.enhance_image(concatenated)
+
+    # Display the concatenated image
+    cv2.imshow('Two Cameras Side by Side', concatenated)
+
+
 def display():
     global frame1, frame2
     square = 1080
 
     while True:
         if frame1 is not None and frame2 is not None:
-            # crop the images to be square
-            sq1 = frame1[0:1080, 420:1500]
-            sq2 = frame2[0:1080, 420:1500]
-
-            # do frame precessing here !!!
-
-            # add padding to get correct spacing
-            left_side = cv2.copyMakeBorder(sq1, 180, 180, 68, 132, cv2.BORDER_CONSTANT, value=(0, 0, 0))
-            right_side = cv2.copyMakeBorder(sq2, 180, 180, 132, 68, cv2.BORDER_CONSTANT, value=(0, 0, 0))
+            #queue = threading.Thread(target=processing, args=(frame1, frame2))
+            #queue.start()
+            processing(frame1,frame2)
+            #time.sleep(1.0/30)
             
-            # Concatenate the frames side by side (horizontally)
-            concatenated = np.hstack((left_side, right_side))
-
-            # Display the concatenated image
-            cv2.imshow('Two Cameras Side by Side', concatenated)
-
         # Exit the loop if 'q' is pressed
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
@@ -94,6 +106,7 @@ def display():
 # Create and start the camera threads
 thread1 = threading.Thread(target=capture_camera1)
 thread2 = threading.Thread(target=capture_camera2)
+
 
 # Start threads
 thread2.start()
