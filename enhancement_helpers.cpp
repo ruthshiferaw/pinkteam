@@ -64,66 +64,66 @@ cv::Mat darkChannelPrior(const cv::Mat &img, int patchSize)
     return darkChannel;
 }
 
-// // Atmospheric Light
-// cv::Vec3f atmosphericLight(const cv::Mat &img, const cv::Mat &darkChannel)
-// {
-//     int nPixels = static_cast<int>(0.001 * darkChannel.total());
-//     cv::Mat flatImg = img.reshape(1, img.total());
-//     cv::Mat flatDarkChannel = darkChannel.reshape(1, darkChannel.total());
-//     cv::Mat indices;
-//     cv::sortIdx(flatDarkChannel, indices, cv::SORT_EVERY_COLUMN + cv::SORT_DESCENDING);
-
-//     cv::Vec3f A(0, 0, 0);
-//     for (int i = 0; i < nPixels; i++)
-//     {
-//         int idx = indices.at<int>(i);
-//         A += flatImg.at<cv::Vec3f>(idx);
-//     }
-//     A *= (1.0 / nPixels);
-//     return A;
-// }
-
-// Atmospheric Light with std::nth_element
-cv::Vec3f atmosphericLight(const cv::Mat &img, const cv::Mat &darkChannel, double sampleFraction = 0.001)
+// Atmospheric Light
+cv::Vec3f atmosphericLight(const cv::Mat &img, const cv::Mat &darkChannel)
 {
-    // Flatten the image and dark channel
-    cv::Mat flatImg = img.reshape(1, img.total());                         // Flattened image as rows of Vec3b
-    cv::Mat flatDarkChannel = darkChannel.reshape(1, darkChannel.total()); // Flattened dark channel
+    int nPixels = static_cast<int>(0.001 * darkChannel.total());
+    cv::Mat flatImg = img.reshape(1, img.total());
+    cv::Mat flatDarkChannel = darkChannel.reshape(1, darkChannel.total());
+    cv::Mat indices;
+    cv::sortIdx(flatDarkChannel, indices, cv::SORT_EVERY_COLUMN + cv::SORT_DESCENDING);
 
-    // Determine the number of brightest pixels to sample
-    int numPixels = std::max(1, static_cast<int>(sampleFraction * flatDarkChannel.total()));
-
-    // Convert the flattened dark channel to a vector for std::nth_element
-    std::vector<std::pair<float, int>> darkChannelWithIndices;
-    darkChannelWithIndices.reserve(flatDarkChannel.total());
-
-    // Fill the vector with pixel values and their indices
-    for (int i = 0; i < flatDarkChannel.total(); ++i)
-    {
-        darkChannelWithIndices.emplace_back(flatDarkChannel.at<float>(i), i);
-    }
-
-    // Use nth_element to find the top `numPixels` brightest pixels
-    std::nth_element(
-        darkChannelWithIndices.begin(),
-        darkChannelWithIndices.begin() + numPixels,
-        darkChannelWithIndices.end(),
-        [](const std::pair<float, int> &a, const std::pair<float, int> &b)
-        {
-            return a.first > b.first; // Sort in descending order based on dark channel intensity
-        });
-
-    // Compute the mean atmospheric light using the top `numPixels` brightest pixels
     cv::Vec3f A(0, 0, 0);
-    for (int i = 0; i < numPixels; ++i)
+    for (int i = 0; i < nPixels; i++)
     {
-        int idx = darkChannelWithIndices[i].second; // Get the index of the i-th brightest pixel
+        int idx = indices.at<int>(i);
         A += flatImg.at<cv::Vec3f>(idx);
     }
-    A *= (1.0 / numPixels); // Average the sum to get the atmospheric light
-
+    A *= (1.0 / nPixels);
     return A;
 }
+
+// // Atmospheric Light with std::nth_element
+// cv::Vec3f atmosphericLight(const cv::Mat &img, const cv::Mat &darkChannel, double sampleFraction = 0.001)
+// {
+//     // Flatten the image and dark channel
+//     cv::Mat flatImg = img.reshape(1, img.total());                         // Flattened image as rows of Vec3b
+//     cv::Mat flatDarkChannel = darkChannel.reshape(1, darkChannel.total()); // Flattened dark channel
+
+//     // Determine the number of brightest pixels to sample
+//     int numPixels = std::max(1, static_cast<int>(sampleFraction * flatDarkChannel.total()));
+
+//     // Convert the flattened dark channel to a vector for std::nth_element
+//     std::vector<std::pair<float, int>> darkChannelWithIndices;
+//     darkChannelWithIndices.reserve(flatDarkChannel.total());
+
+//     // Fill the vector with pixel values and their indices
+//     for (int i = 0; i < flatDarkChannel.total(); ++i)
+//     {
+//         darkChannelWithIndices.emplace_back(flatDarkChannel.at<float>(i), i);
+//     }
+
+//     // Use nth_element to find the top `numPixels` brightest pixels
+//     std::nth_element(
+//         darkChannelWithIndices.begin(),
+//         darkChannelWithIndices.begin() + numPixels,
+//         darkChannelWithIndices.end(),
+//         [](const std::pair<float, int> &a, const std::pair<float, int> &b)
+//         {
+//             return a.first > b.first; // Sort in descending order based on dark channel intensity
+//         });
+
+//     // Compute the mean atmospheric light using the top `numPixels` brightest pixels
+//     cv::Vec3f A(0, 0, 0);
+//     for (int i = 0; i < numPixels; ++i)
+//     {
+//         int idx = darkChannelWithIndices[i].second; // Get the index of the i-th brightest pixel
+//         A += flatImg.at<cv::Vec3f>(idx);
+//     }
+//     A *= (1.0 / numPixels); // Average the sum to get the atmospheric light
+
+//     return A;
+// }
 
 // Estimate Transmission
 cv::Mat estimateTransmission(const cv::Mat &img, const cv::Vec3f &A, double omega)
@@ -182,7 +182,7 @@ cv::Mat dehazeImage(const cv::Mat &img, double scaleFactor, int patchSize)
 // Enhance Image (wrapper)
 std::pair<cv::Mat, std::map<std::string, double>> enhanceImage(
     const cv::Mat &img, bool whiteBalance = false, bool applyDehazing = true,
-    bool useCLAHE = false, bool applyFastFiltersFlag = false);
+    bool useCLAHE = false, bool applyFastFiltersFlag = false)
 {
 
     std::map<std::string, double> timings;
