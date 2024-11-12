@@ -1,18 +1,17 @@
 {
     "configurations": [
         {
-            "name": "Raspbery Pi",
+            "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/include/opencv4"
-                
-
+                "/opt/homebrew/opt/opencv",
+                "/opt/homebrew/Cellar/opencv/4.10.0_12/include/opencv4"
             ],
             "defines": [],
             "cStandard": "c11",
             "cppStandard": "c++11",
-            "intelliSenseMode": "linux-gcc-arm",
-            "compilerPath": "/usr/bin/gcc"
+            "intelliSenseMode": "macos-gcc-arm64",
+            "compilerPath": "/usr/bin/clang++"
         }
     ],
     "version": 4
