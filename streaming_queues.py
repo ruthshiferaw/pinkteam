@@ -32,6 +32,11 @@ def capture_camera(camera_index, frame_queue):
 
 # Process frames from both queues and display them
 def processing_and_display(frame_queue1, frame_queue2):
+    #affects cropping location
+    sliding_val = 420  #420 is exact center, 0 keeps inner edge
+    start1, end1 = 1920-sliding_val-1080, 1920-sliding_val
+    start2, end2 = sliding_val, 1080+sliding_val
+
     while True:
         if not frame_queue1.empty() and not frame_queue2.empty():
             # Get frames from both cameras
@@ -39,16 +44,16 @@ def processing_and_display(frame_queue1, frame_queue2):
             f2 = frame_queue2.get()
 
             # Process frames
-            sq1 = f1[0:1080, 420:1500]
+            sq1 = f1[0:1080, start1:end1]
             sq1 = cv2.resize(sq1, (1216, 1216))
-            sq2 = f2[0:1080, 420:1500]
+            sq2 = f2[0:1080, start2:end2]
             sq2 = cv2.resize(sq2, (1216, 1216))
 
             left_side = cv2.copyMakeBorder(sq1, 112, 112, 0, 64, cv2.BORDER_CONSTANT, value=(0, 0, 0))
             right_side = cv2.copyMakeBorder(sq2, 112, 112, 64, 0, cv2.BORDER_CONSTANT, value=(0, 0, 0))
             concatenated = np.hstack((left_side, right_side))
 
-            # time.sleep(0.02)
+            time.sleep(0.1)
             # # Perform enhancement if needed
             # concatenated, timing = enhance.enhance_image(concatenated)
 
