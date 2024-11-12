@@ -5,7 +5,7 @@
       "name": "Run enhancement_helpers",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/pinkteam/enhancement_helpers", // Path to the compiled executable
+      "program": "${workspaceFolder}/enhancement_helpers", // Path to the compiled executable
       "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
