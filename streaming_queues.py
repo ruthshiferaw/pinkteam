@@ -20,10 +20,10 @@ def capture_camera(camera_index, frame_queue):
     while True:
         ret, frame = cap.read()
         if ret:
-            if frame_queue.full():
-                frame_queue.get()  # Remove oldest frame if queue is full
-            frame_queue.put(frame)  # Insert new frame
-            time.sleep(1.0/30)
+            timestamp = time.time()
+            # Store the frame with its timestamp as an additional field (preserve pixel data)
+            frame_queue.put([frame, timestamp])  # Store frame and timestamp together in a list
+            time.sleep(1.0 / 30)
         else:
             print(f"Error: Failed to capture frame from camera {camera_index}.")
             break
@@ -34,29 +34,35 @@ def capture_camera(camera_index, frame_queue):
 def process_frames(frame_queue1, frame_queue2, processed_queue):
     while True:
         if not frame_queue1.empty() and not frame_queue2.empty():
-            # Get frames from both cameras
-            f1 = frame_queue1.get()
-            f2 = frame_queue2.get()
+            # Retrieve the frame and timestamp from both queues
+            frame1, timestamp1 = frame_queue1.get()
+            frame2, timestamp2 = frame_queue2.get()
 
-            # Process frames
-            sq1 = f1[0:1080, 420:1500]
-            sq1 = cv2.resize(sq1, (1216, 1216))
-            sq2 = f2[0:1080, 420:1500]
-            sq2 = cv2.resize(sq2, (1216, 1216))
+            # Check if the timestamps are close enough to be synchronized
+            if abs(timestamp1 - timestamp2) <= 0.03:  # Threshold for synchronization
+                # Process frames (preserving pixel data)
+                sq1 = frame1[0:1080, 420:1500]  # Crop frame
+                sq1 = cv2.resize(sq1, (1216, 1216))  # Resize frame
+                sq2 = frame2[0:1080, 420:1500]
+                sq2 = cv2.resize(sq2, (1216, 1216))
 
-            left_side = cv2.copyMakeBorder(sq1, 112, 112, 0, 64, cv2.BORDER_CONSTANT, value=(0, 0, 0))
-            right_side = cv2.copyMakeBorder(sq2, 112, 112, 64, 0, cv2.BORDER_CONSTANT, value=(0, 0, 0))
-            concatenated = np.hstack((left_side, right_side))
+                # Add borders to the frames
+                left_side = cv2.copyMakeBorder(sq1, 112, 112, 0, 64, cv2.BORDER_CONSTANT, value=(0, 0, 0))
+                right_side = cv2.copyMakeBorder(sq2, 112, 112, 64, 0, cv2.BORDER_CONSTANT, value=(0, 0, 0))
 
-            # # Optional: run a delay instead of running the enhancement
-            # time.sleep(0.02)
-            # # Optional: Perform enhancement if needed
-            # concatenated, timing = enhance.enhance_image(concatenated)
+                # Concatenate frames side-by-side
+                concatenated = np.hstack((left_side, right_side))
 
-            # Place the processed frame in the processed queue
-            if processed_queue.full():
-                processed_queue.get()  # Remove oldest processed frame if queue is full
-            processed_queue.put(concatenated)
+                # Place the processed frame in the processed queue
+                if processed_queue.full():
+                    processed_queue.get()  # Remove the oldest processed frame if queue is full
+                processed_queue.put(concatenated)
+            else:
+                # If frames are out of sync, discard the older one to prevent delay
+                if timestamp1 < timestamp2:
+                    frame_queue1.get()
+                else:
+                    frame_queue2.get()
 
 display_width=1280
 display_height=720
