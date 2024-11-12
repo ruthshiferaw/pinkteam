@@ -90,7 +90,7 @@ def dehaze_image(img, scale_factor=0.5, patch_size=15):
     recovered_img = recover_scene(img, A, transmission_refined)
     return recovered_img
 
-def enhance_image(img, white_balance=True, apply_dehazing=True, apply_clahe=True, apply_fast_filters_flag=True):
+def enhance_image(img, white_balance=False, apply_dehazing=True, apply_clahe=False, apply_fast_filters_flag=False):
     timings = {}  # Dictionary to store timing for each function
     # Ensure the image is in uint8 RGB format at the beginning
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)

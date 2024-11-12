@@ -84,7 +84,7 @@ cv::Mat darkChannelPrior(const cv::Mat &img, int patchSize)
 // }
 
 // Atmospheric Light with std::nth_element
-cv::Vec3f atmosphericLight(const cv::Mat &img, const cv::Mat &darkChannel, double sampleFraction = 0.1)
+cv::Vec3f atmosphericLight(const cv::Mat &img, const cv::Mat &darkChannel, double sampleFraction = 0.001)
 {
     // Flatten the image and dark channel
     cv::Mat flatImg = img.reshape(1, img.total());                         // Flattened image as rows of Vec3b
@@ -180,8 +180,11 @@ cv::Mat dehazeImage(const cv::Mat &img, double scaleFactor, int patchSize)
 }
 
 // Enhance Image (wrapper)
-std::pair<cv::Mat, std::map<std::string, double>> enhanceImage(const cv::Mat &img, bool whiteBalance, bool applyDehazing, bool useCLAHE, bool applyFastFiltersFlag)
+std::pair<cv::Mat, std::map<std::string, double>> enhanceImage(
+    const cv::Mat &img, bool whiteBalance = false, bool applyDehazing = true,
+    bool useCLAHE = false, bool applyFastFiltersFlag = false);
 {
+
     std::map<std::string, double> timings;
     cv::Mat result = img.clone();
     auto start = std::chrono::high_resolution_clock::now();

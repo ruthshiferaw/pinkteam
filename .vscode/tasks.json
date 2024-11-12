@@ -1,0 +1,33 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "C:/msys64/ucrt64/bin/g++.exe",
+      "args": [
+        "-g",
+        "${workspaceFolder}/pinkteam/enhancement_helpers.cpp",
+        "-o",
+        "${workspaceFolder}/pinkteam/enhancement_helpers"
+
+        // Include path for OpenCV headers
+        "-I", "C:/opencv/build/include",      // Path to the OpenCV headers
+        
+        // Linker flags to link with OpenCV libraries
+        "-L", "C:/opencv/build/x64/vc15/lib", // Path to OpenCV libraries
+        "-lopencv_core460",                   // Link to OpenCV core module
+        "-lopencv_imgcodecs460",              // Link to OpenCV image codecs
+        "-lopencv_highgui460",                // Link to OpenCV highgui module
+        "-lopencv_imgproc460"                 // Link to OpenCV image processing module
+        
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$gcc"],
+      "detail": "Compile C++ file"
+    }
+  ]
+}
