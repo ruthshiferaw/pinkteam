@@ -53,6 +53,11 @@ def process_frames(frame_queue1, frame_queue2, processed_queue):
                 # Concatenate frames side-by-side
                 concatenated = np.hstack((left_side, right_side))
 
+                # Optional: delay to simulate an arbitrary enhancement process
+                time.sleep(0.004)
+                # # Optional: image enhancement
+                # concatenated, timing = enhance.enhance_image(concatenated)
+
                 # Place the processed frame in the processed queue
                 if processed_queue.full():
                     processed_queue.get()  # Remove the oldest processed frame if queue is full
