@@ -19,11 +19,17 @@ def apply_CLAHE(frame):
 def apply_white_balance(img):
     # Compute mean intensity for each channel
     avg_b, avg_g, avg_r = np.mean(img, axis=(0, 1))
+
     # Normalize channels by scaling with mean values and converting to uint8
     img = img.astype(np.float32)
     img[:, :, 0] *= (avg_r / avg_b)
     img[:, :, 1] *= (avg_r / avg_g)
     img = np.clip(img, 0, 255).astype(np.uint8)
+    
+    #if we use white_balance in the final, test following code with C++ for efficiency
+    # # Scale each channel by ratios, using vectorized operations
+    # scale = np.array([avg_r / avg_b, avg_r / avg_g, 1.0])  # CHANGED
+    # img = (img * scale).clip(0, 255).astype(np.uint8)  # CHANGED
     return img
 
 def apply_fast_filters(frame):
