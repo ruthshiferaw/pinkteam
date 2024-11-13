@@ -8,6 +8,7 @@
 #include <chrono>
 #include <iostream>
 #include <utility>
+#include "enhancement_helpers.h"
 
 void captureCamera(int cameraIndex, std::queue<std::pair<cv::Mat, double>>& frameQueue, std::mutex& queueMutex, std::atomic<bool>& stopFlag);
 void processFrames(std::queue<std::pair<cv::Mat, double>>& frameQueue1, std::queue<std::pair<cv::Mat, double>>& frameQueue2,
@@ -91,6 +92,8 @@ void processFrames(std::queue<std::pair<cv::Mat, double>>& frameQueue1, std::que
 
                 cv::Mat concatenated;
                 cv::hconcat(leftSide, rightSide, concatenated);
+
+                cv::Mat concatenated = enhanceImage(concatenated);
 
                 std::lock_guard<std::mutex> lockProcessed(processedQueueMutex);
                 if (processedQueue.size() >= 10) {
