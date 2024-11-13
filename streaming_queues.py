@@ -30,8 +30,13 @@ def capture_camera(camera_index, frame_queue):
 
     cap.release()
 
-# Process frames from both queues
-def process_frames(frame_queue1, frame_queue2, processed_queue):
+# Process frames from both queues and display them
+def processing_and_display(frame_queue1, frame_queue2):
+    #affects cropping location
+    sliding_val = 420  #420 is exact center, 0 keeps inner edge
+    start1, end1 = 1920-sliding_val-1080, 1920-sliding_val
+    start2, end2 = sliding_val, 1080+sliding_val
+
     while True:
         if not frame_queue1.empty() and not frame_queue2.empty():
             # Retrieve the frame and timestamp from both queues
@@ -41,9 +46,9 @@ def process_frames(frame_queue1, frame_queue2, processed_queue):
             # Check if the timestamps are close enough to be synchronized
             if abs(timestamp1 - timestamp2) <= 0.03:  # Threshold for synchronization
                 # Process frames (preserving pixel data)
-                sq1 = frame1[0:1080, 420:1500]  # Crop frame
+                sq1 = frame1[0:1080, start1:end1]  # Crop frame
                 sq1 = cv2.resize(sq1, (1216, 1216))  # Resize frame
-                sq2 = frame2[0:1080, 420:1500]
+                sq2 = frame2[0:1080, start2:end2]
                 sq2 = cv2.resize(sq2, (1216, 1216))
 
                 # Add borders to the frames

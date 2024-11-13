@@ -1,18 +1,18 @@
 {
-  "configurations": [
-    {
-      "name": "Win32",
-      "includePath": [
-        "${workspaceFolder}/**",
-        "C:/Users/Ruth/Documents/GitHub/pinkteam",
-        "C:/Users/Ruth/opencv/build/include"
-      ],
-      "defines": [],
-      "compilerPath": "C:/msys64/ucrt64/bin/g++.exe",
-      "cStandard": "c11",
-      "cppStandard": "c++17",
-      "intelliSenseMode": "gcc-x64"
-    }
-  ],
-  "version": 4
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/opt/homebrew/opt/opencv",
+                "/opt/homebrew/Cellar/opencv/4.10.0_12/include/opencv4"
+            ],
+            "defines": [],
+            "cStandard": "c11",
+            "cppStandard": "c++11",
+            "intelliSenseMode": "macos-gcc-arm64",
+            "compilerPath": "/usr/bin/clang++"
+        }
+    ],
+    "version": 4
 }

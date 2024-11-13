@@ -46,7 +46,7 @@ int main(int argc, char **argv)
         auto start = std::chrono::high_resolution_clock::now();
 
         // Apply enhancement (e.g., CLAHE or other enhancement functions)
-        enhancedFrame = enhanceImage(frame); // Example: using CLAHE, modify as needed
+        enhancedFrame = applyCLAHE(frame); // Example: using CLAHE, modify as needed
 
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double, std::milli> processingTime = end - start;

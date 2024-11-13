@@ -25,7 +25,8 @@ def apply_white_balance(img):
     img[:, :, 0] *= (avg_r / avg_b)
     img[:, :, 1] *= (avg_r / avg_g)
     img = np.clip(img, 0, 255).astype(np.uint8)
-
+    
+    #if we use white_balance in the final, test following code with C++ for efficiency
     # # Scale each channel by ratios, using vectorized operations
     # scale = np.array([avg_r / avg_b, avg_r / avg_g, 1.0])  # CHANGED
     # img = (img * scale).clip(0, 255).astype(np.uint8)  # CHANGED
@@ -40,17 +41,11 @@ def dark_channel_prior(img, patch_size=15):
     dark_channel = cv2.erode(dark_channel, kernel)
     return dark_channel
 
-def atmospheric_light(img, dark_channel): #sample_fraction=0.1
+def atmospheric_light(img, dark_channel):
     flat_img = img.reshape(-1, 3)
     flat_dark = dark_channel.ravel()
-
     num_pixels = int(0.001 * len(flat_dark))
     indices = np.argsort(flat_dark)[-num_pixels:]
-
-    # # Sample only a fraction of the brightest pixels
-    # num_pixels = max(1, int(sample_fraction * len(flat_dark)))
-    # indices = np.argpartition(flat_dark, -num_pixels)[-num_pixels:]
-
     A = np.mean(flat_img[indices], axis=0)
     return A
 
@@ -90,7 +85,7 @@ def dehaze_image(img, scale_factor=0.5, patch_size=15):
     recovered_img = recover_scene(img, A, transmission_refined)
     return recovered_img
 
-def enhance_image(img, white_balance=False, apply_dehazing=True, apply_clahe=False, apply_fast_filters_flag=False):
+def enhance_image(img, white_balance=True, apply_dehazing=True, apply_clahe=True, apply_fast_filters_flag=True):
     timings = {}  # Dictionary to store timing for each function
     # Ensure the image is in uint8 RGB format at the beginning
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
