@@ -3,12 +3,9 @@ import numpy as np
 import threading
 import queue
 import time
-import enhancement_helpers as enhance
-
 
 # Capture and put frames in queue
-def capture_camera(camera_index, frame_queue):
-    print(f"Camera {camera_index} started", time.time())
+def capture_camera(camera_index, frame_queue, stop_event):
     cap = cv2.VideoCapture(camera_index, cv2.CAP_DSHOW)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
@@ -17,12 +14,11 @@ def capture_camera(camera_index, frame_queue):
         print(f"Error: Could not open camera {camera_index}.")
         return
 
-    while True:
+    while not stop_event.is_set():
         ret, frame = cap.read()
         if ret:
             timestamp = time.time()
-            # Store the frame with its timestamp as an additional field (preserve pixel data)
-            frame_queue.put([frame, timestamp])  # Store frame and timestamp together in a list
+            frame_queue.put([frame, timestamp])
             time.sleep(1.0 / 30)
         else:
             print(f"Error: Failed to capture frame from camera {camera_index}.")
@@ -31,87 +27,82 @@ def capture_camera(camera_index, frame_queue):
     cap.release()
 
 # Process frames from both queues and display them
-def processing_and_display(frame_queue1, frame_queue2):
-    #affects cropping location
-    sliding_val = 420  #420 is exact center, 0 keeps inner edge
-    start1, end1 = 1920-sliding_val-1080, 1920-sliding_val
-    start2, end2 = sliding_val, 1080+sliding_val
+def processing_and_display(frame_queue1, frame_queue2, processed_queue, stop_event):
+    sliding_val = 420
+    start1, end1 = 1920 - sliding_val - 1080, 1920 - sliding_val
+    start2, end2 = sliding_val, 1080 + sliding_val
 
-    while True:
+    while not stop_event.is_set():
         if not frame_queue1.empty() and not frame_queue2.empty():
-            # Retrieve the frame and timestamp from both queues
             frame1, timestamp1 = frame_queue1.get()
             frame2, timestamp2 = frame_queue2.get()
 
-            # Check if the timestamps are close enough to be synchronized
-            if abs(timestamp1 - timestamp2) <= 0.03:  # Threshold for synchronization
-                # Process frames (preserving pixel data)
-                sq1 = frame1[0:1080, start1:end1]  # Crop frame
-                sq1 = cv2.resize(sq1, (1216, 1216))  # Resize frame
+            if abs(timestamp1 - timestamp2) <= 0.03:
+                sq1 = frame1[0:1080, start1:end1]
+                sq1 = cv2.resize(sq1, (1216, 1216))
                 sq2 = frame2[0:1080, start2:end2]
                 sq2 = cv2.resize(sq2, (1216, 1216))
 
-                # Add borders to the frames
                 left_side = cv2.copyMakeBorder(sq1, 112, 112, 0, 64, cv2.BORDER_CONSTANT, value=(0, 0, 0))
                 right_side = cv2.copyMakeBorder(sq2, 112, 112, 64, 0, cv2.BORDER_CONSTANT, value=(0, 0, 0))
-
-                # Concatenate frames side-by-side
                 concatenated = np.hstack((left_side, right_side))
 
-                # Optional: delay to simulate an arbitrary enhancement process
-                time.sleep(0.004)
-                # # Optional: image enhancement
-                # concatenated, timing = enhance.enhance_image(concatenated)
-
-                # Place the processed frame in the processed queue
                 if processed_queue.full():
-                    processed_queue.get()  # Remove the oldest processed frame if queue is full
+                    processed_queue.get()
                 processed_queue.put(concatenated)
             else:
-                # If frames are out of sync, discard the older one to prevent delay
                 if timestamp1 < timestamp2:
                     frame_queue1.get()
                 else:
                     frame_queue2.get()
 
-display_width=1280
-display_height=720
-new_size = None
-
 # Display frames from the processed queue
-def display_frames(processed_queue):
-    while True:
+def display_frames(processed_queue, stop_event):
+    prev_width, prev_height = 1280, 720
+    frame_count = 0
+    cv2.namedWindow('Two Cameras Side by Side', cv2.WINDOW_NORMAL)
+    
+    while not stop_event.is_set():
         if not processed_queue.empty():
-            # Get the processed frame
             concatenated = processed_queue.get()
             
-            # Resize the frame to fit the specified dimensions
-            frame_height, frame_width = concatenated.shape[:2]
-            scaling_factor = min(display_width / frame_width, display_height / frame_height)
-            new_size = (int(frame_width * scaling_factor), int(frame_height * scaling_factor))
-            resized_frame = cv2.resize(concatenated, new_size)
+            if frame_count % 10 == 0:
+                try:
+                    window_width = int(cv2.getWindowProperty('Two Cameras Side by Side', cv2.WND_PROP_AUTOSIZE))
+                    window_height = int(cv2.getWindowProperty('Two Cameras Side by Side', cv2.WND_PROP_AUTOSIZE))
+                    if (window_width != prev_width or window_height != prev_height) and window_width > 0 and window_height > 0:
+                        prev_width, prev_height = window_width, window_height
+                        frame_height, frame_width = concatenated.shape[:2]
+                        scaling_factor = min(window_width / frame_width, window_height / frame_height)
+                        new_size = (int(frame_width * scaling_factor), int(frame_height * scaling_factor))
+                        resized_frame = cv2.resize(concatenated, new_size)
+                    else:
+                        resized_frame = cv2.resize(concatenated, (prev_width, prev_height))
+                except cv2.error:
+                    resized_frame = cv2.resize(concatenated, (prev_width, prev_height))
+            else:
+                resized_frame = cv2.resize(concatenated, (prev_width, prev_height))
 
-            # Display the resized concatenated image
             cv2.imshow('Two Cameras Side by Side', resized_frame)
+            frame_count += 1
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
+                stop_event.set()  # Signal all threads to stop
                 break
 
     cv2.destroyAllWindows()
 
-# Create and start the camera threads
+# Main execution
 frame_queue1 = queue.Queue(maxsize=20)
 frame_queue2 = queue.Queue(maxsize=20)
 processed_queue = queue.Queue(maxsize=10)
+stop_event = threading.Event()
 
-# Threads for capturing, processing, and displaying
-capture_thread1 = threading.Thread(target=capture_camera, args=(1, frame_queue1))
-capture_thread2 = threading.Thread(target=capture_camera, args=(2, frame_queue2))
-processing_thread = threading.Thread(target=process_frames, args=(frame_queue1, frame_queue2, processed_queue))
-display_thread = threading.Thread(target=display_frames, args=(processed_queue,))
-
-thread1 = threading.Thread(target=capture_camera, args=(1, frame_queue1))
-thread2 = threading.Thread(target=capture_camera, args=(2, frame_queue2))
+# Threads
+capture_thread1 = threading.Thread(target=capture_camera, args=(1, frame_queue1, stop_event))
+capture_thread2 = threading.Thread(target=capture_camera, args=(2, frame_queue2, stop_event))
+processing_thread = threading.Thread(target=processing_and_display, args=(frame_queue1, frame_queue2, processed_queue, stop_event))
+display_thread = threading.Thread(target=display_frames, args=(processed_queue, stop_event))
 
 # Start threads
 capture_thread1.start()
@@ -119,7 +110,7 @@ capture_thread2.start()
 processing_thread.start()
 display_thread.start()
 
-# Ensure the program ends correctly by waiting for threads
+# Wait for threads to finish
 capture_thread1.join()
 capture_thread2.join()
 processing_thread.join()
