@@ -1,6 +1,6 @@
 #for Ruth only:
 import sys
-#sys.path.append(r"c:\users\ruth\appdata\local\packages\pythonsoftwarefoundation.python.3.12_qbz5n2kfra8p0\localcache\local-packages\python312\site-packages")  # Replace with your actual path
+sys.path.append(r"c:\users\ruth\appdata\local\packages\pythonsoftwarefoundation.python.3.12_qbz5n2kfra8p0\localcache\local-packages\python312\site-packages")  # Replace with your actual path
 
 import os
 import cv2
@@ -28,7 +28,7 @@ def main(video_path, output_path="Enhanced Videos", optimization_note="", csv_no
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = cap.get(cv2.CAP_PROP_FPS)
     writer = cv2.VideoWriter(enhanced_video_path, cv2.VideoWriter_fourcc(*'mp4v'), fps / 3, (frame_width, frame_height))
-
+    
     frame_count = 0
     total_processing_time = 0  # Initialize total processing time
 
@@ -53,8 +53,10 @@ def main(video_path, output_path="Enhanced Videos", optimization_note="", csv_no
         for func_name, func_time in timings.items():
             print(f"{func_name}: {func_time} ms")
         print(f"Total Processing Time for Frame {frame_count}: {frame_processing_time} ms\n")
-
-        writer.write(current_frame)
+        # if frame_count == 200:
+        #     enhanced_image_path = os.path.join(output_path, f"{enhanced_name}.jpg")
+        #     cv2.imwrite(enhanced_image_path, current_frame)  # Save the frame as an image file
+        # writer.write(current_frame)
 
     cap.release()
     writer.release()

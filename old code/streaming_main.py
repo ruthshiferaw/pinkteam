@@ -2,11 +2,14 @@ import cv2
 import numpy as np
 import threading
 import enhancement_helpers as enhance
+import queue
 import time
 
 # Global variables to store frames from both cameras
 frame1 = None
 frame2 = None
+
+frame_q = queue.Queue(maxsize = 10)
 
 goal_dims = (1280, 1440)
 square = (1200)
@@ -63,11 +66,15 @@ def capture_camera2():
 
     cap2.release()
 
+sliding_val = 500  #420 is exact center, 0 keeps inner edge, 480 max
+start1, end1 = 1920-sliding_val-1080, 1920-sliding_val
+start2, end2 = sliding_val, 1080+sliding_val
+
 def processing(f1, f2):
     # crop the images to be square
-    sq1 = f1[0:1080, 420:1500]
+    sq1 = f1[0:1080, start1:end1]
     sq1 = cv2.resize(sq1, (1216,1216))
-    sq2 = f2[0:1080, 420:1500]
+    sq2 = f2[0:1080, start2:end2]
     sq2 = cv2.resize(sq2, (1216,1216))
 
 
