@@ -1,17 +1,20 @@
 {
     "configurations": [
         {
-            "name": "Mac",
+            "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/opt/homebrew/opt/opencv",
-                "/opt/homebrew/Cellar/opencv/4.10.0_12/include/opencv4"
+                "C:/opencv/build/include"
             ],
-            "defines": [],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "C:\\msys64\\mingw64\\bin\\gcc.exe",
+            "intelliSenseMode": "windows-gcc-x64",
             "cStandard": "c11",
-            "cppStandard": "c++11",
-            "intelliSenseMode": "macos-gcc-arm64",
-            "compilerPath": "/usr/bin/clang++"
+            "cppStandard": "c++17"
         }
     ],
     "version": 4
