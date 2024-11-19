@@ -8,39 +8,6 @@
 #include <chrono>
 #include <iostream>
 #include <utility>
-#include "enhancement_helpers.h"
-
-void captureCamera(int cameraIndex, std::queue<std::pair<cv::Mat, double>>& frameQueue, std::mutex& queueMutex, std::atomic<bool>& stopFlag);
-void processFrames(std::queue<std::pair<cv::Mat, double>>& frameQueue1, std::queue<std::pair<cv::Mat, double>>& frameQueue2,
-                   std::queue<cv::Mat>& processedQueue, std::mutex& queueMutex1, std::mutex& queueMutex2, 
-                   std::mutex& processedQueueMutex, std::atomic<bool>& stopFlag);
-void displayFrames(std::queue<cv::Mat>& processedQueue, std::mutex& processedQueueMutex, std::atomic<bool>& stopFlag);
-
-int main() {
-    std::queue<std::pair<cv::Mat, double>> frameQueue1, frameQueue2;
-    std::queue<cv::Mat> processedQueue;
-    std::mutex queueMutex1, queueMutex2, processedQueueMutex;
-    std::atomic<bool> stopFlag(false);
-
-    // Threads for capturing, processing, and displaying frames
-    std::thread captureThread1(captureCamera, 1, std::ref(frameQueue1), std::ref(queueMutex1), std::ref(stopFlag));
-    std::thread captureThread2(captureCamera, 2, std::ref(frameQueue2), std::ref(queueMutex2), std::ref(stopFlag));
-    std::thread processingThread(processFrames, std::ref(frameQueue1), std::ref(frameQueue2), std::ref(processedQueue), 
-                                 std::ref(queueMutex1), std::ref(queueMutex2), std::ref(processedQueueMutex), std::ref(stopFlag));
-    std::thread displayThread(displayFrames, std::ref(processedQueue), std::ref(processedQueueMutex), std::ref(stopFlag));
-
-    // Wait for user to stop the program
-    std::cin.get();
-    stopFlag = true;
-
-    // Join threads
-    captureThread1.join();
-    captureThread2.join();
-    processingThread.join();
-    displayThread.join();
-
-    return 0;
-}
 
 // Capture frames and put them in the queue
 void captureCamera(int cameraIndex, std::queue<std::pair<cv::Mat, double>>& frameQueue, std::mutex& queueMutex, std::atomic<bool>& stopFlag) {
@@ -83,6 +50,7 @@ void processFrames(std::queue<std::pair<cv::Mat, double>>& frameQueue1, std::que
             if (std::abs(frameData1.second - frameData2.second) <= 0.03) {
                 cv::Mat sq1 = frameData1.first(cv::Rect(420, 0, 1080, 1080));
                 cv::Mat sq2 = frameData2.first(cv::Rect(420, 0, 1080, 1080));
+
                 cv::resize(sq1, sq1, cv::Size(1216, 1216));
                 cv::resize(sq2, sq2, cv::Size(1216, 1216));
 
@@ -92,9 +60,6 @@ void processFrames(std::queue<std::pair<cv::Mat, double>>& frameQueue1, std::que
 
                 cv::Mat concatenated;
                 cv::hconcat(leftSide, rightSide, concatenated);
-
-                // Extract the enhanced image from the returned pair
-                concatenated = enhanceImage(concatenated).first;
 
                 std::lock_guard<std::mutex> lockProcessed(processedQueueMutex);
                 if (processedQueue.size() >= 10) {
@@ -114,9 +79,10 @@ void processFrames(std::queue<std::pair<cv::Mat, double>>& frameQueue1, std::que
     }
 }
 
-// Display frames from the processed queue
+// Display frames from the processed queue and adjust image sizes dynamically
 void displayFrames(std::queue<cv::Mat>& processedQueue, std::mutex& processedQueueMutex, std::atomic<bool>& stopFlag) {
-    int displayWidth = 1280, displayHeight = 720;
+    bool isFirstFrame = true;
+    cv::Size windowSize(1280, 720); // Default window size
 
     while (!stopFlag) {
         cv::Mat concatenated;
@@ -129,9 +95,23 @@ void displayFrames(std::queue<cv::Mat>& processedQueue, std::mutex& processedQue
         }
 
         if (!concatenated.empty()) {
+            if (isFirstFrame) {
+                // Create the window only once
+                cv::namedWindow("Two Cameras Side by Side", cv::WINDOW_NORMAL);
+                cv::resizeWindow("Two Cameras Side by Side", windowSize.width, windowSize.height);
+                isFirstFrame = false;
+            } else {
+                // Dynamically adjust the size based on the existing window size
+                cv::Rect windowRect = cv::getWindowImageRect("Two Cameras Side by Side");
+                windowSize.width = windowRect.width;
+                windowSize.height = windowRect.height;
+            }
+
+            // Resize the frame to fit the window while maintaining aspect ratio
             int frameWidth = concatenated.cols;
             int frameHeight = concatenated.rows;
-            double scalingFactor = std::min(displayWidth / (double)frameWidth, displayHeight / (double)frameHeight);
+
+            double scalingFactor = std::min(windowSize.width / (double)frameWidth, windowSize.height / (double)frameHeight);
             cv::Size newSize(static_cast<int>(frameWidth * scalingFactor), static_cast<int>(frameHeight * scalingFactor));
             cv::Mat resizedFrame;
             cv::resize(concatenated, resizedFrame, newSize);
@@ -144,4 +124,37 @@ void displayFrames(std::queue<cv::Mat>& processedQueue, std::mutex& processedQue
         }
     }
     cv::destroyAllWindows();
+}
+
+int main() {
+    try {
+        std::queue<std::pair<cv::Mat, double>> frameQueue1, frameQueue2;
+        std::queue<cv::Mat> processedQueue;
+        std::mutex queueMutex1, queueMutex2, processedQueueMutex;
+        std::atomic<bool> stopFlag(false);
+
+        // Threads for capturing, processing, and displaying frames
+        std::thread captureThread1(captureCamera, 0, std::ref(frameQueue1), std::ref(queueMutex1), std::ref(stopFlag));
+        std::thread captureThread2(captureCamera, 1, std::ref(frameQueue2), std::ref(queueMutex2), std::ref(stopFlag));
+        std::thread processingThread(processFrames, std::ref(frameQueue1), std::ref(frameQueue2), std::ref(processedQueue), 
+                                     std::ref(queueMutex1), std::ref(queueMutex2), std::ref(processedQueueMutex), std::ref(stopFlag));
+        std::thread displayThread(displayFrames, std::ref(processedQueue), std::ref(processedQueueMutex), std::ref(stopFlag));
+
+        // Inform the user to press Enter to stop the program
+        std::cout << "Press Enter to stop the program..." << std::endl;
+        std::cin.get(); // Wait for the user to press Enter
+        stopFlag = true;
+
+        // Join threads
+        captureThread1.join();
+        captureThread2.join();
+        processingThread.join();
+        displayThread.join();
+    } catch (const std::exception& e) {
+        std::cerr << "Exception occurred: " << e.what() << std::endl;
+    } catch (...) {
+        std::cerr << "An unknown error occurred." << std::endl;
+    }
+
+    return 0;
 }
