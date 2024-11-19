@@ -93,7 +93,8 @@ void processFrames(std::queue<std::pair<cv::Mat, double>>& frameQueue1, std::que
                 cv::Mat concatenated;
                 cv::hconcat(leftSide, rightSide, concatenated);
 
-                cv::Mat concatenated = enhanceImage(concatenated);
+                // Extract the enhanced image from the returned pair
+                concatenated = enhanceImage(concatenated).first;
 
                 std::lock_guard<std::mutex> lockProcessed(processedQueueMutex);
                 if (processedQueue.size() >= 10) {

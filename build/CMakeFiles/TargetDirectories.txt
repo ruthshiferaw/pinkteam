@@ -1,0 +1,3 @@
+C:/Users/mcserver/Desktop/pinkteam/build/CMakeFiles/PinkTeamApp.dir
+C:/Users/mcserver/Desktop/pinkteam/build/CMakeFiles/edit_cache.dir
+C:/Users/mcserver/Desktop/pinkteam/build/CMakeFiles/rebuild_cache.dir

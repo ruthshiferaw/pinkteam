@@ -1,0 +1,3 @@
+"C:\Program Files\CMake\bin\cmake.exe" -E rm -f CMakeFiles\PinkTeamApp.dir/objects.a
+C:\msys64\mingw64\bin\ar.exe qc CMakeFiles\PinkTeamApp.dir/objects.a @CMakeFiles\PinkTeamApp.dir\objects1.rsp
+C:\msys64\mingw64\bin\c++.exe -O3 -DNDEBUG -Wl,--whole-archive CMakeFiles\PinkTeamApp.dir/objects.a -Wl,--no-whole-archive -o PinkTeamApp.exe -Wl,--out-implib,libPinkTeamApp.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\PinkTeamApp.dir\linkLibs.rsp
