@@ -75,14 +75,15 @@ def recover_scene(img, A, t, t0=0.1):
 
 # Main function that applies dehazing with downscaling
 def dehaze_image(img, scale_factor=0.5, patch_size=15):
-    small_img = downscale_image(img, scale_factor=scale_factor)  # DOWNscaled image
+    # small_img = downscale_image(img, scale_factor=scale_factor)  # DOWNscaled image
+    small_img = img
     dark_channel = dark_channel_prior(small_img, patch_size=patch_size)
     A = atmospheric_light(small_img, dark_channel)
     transmission = estimate_transmission(small_img, A)
     gray_img = cv2.cvtColor(small_img, cv2.COLOR_RGB2GRAY) / 255.0
     transmission_refined = guided_filter(gray_img, transmission)
-    transmission_refined = upscale_image(transmission_refined, img.shape)
-    recovered_img = recover_scene(img, A, transmission_refined)
+    # transmission_refined = upscale_image(transmission_refined, img.shape)
+    recovered_img = recover_scene(img, A, transmission_refined) #transmission_refined
     return recovered_img
 
 def enhance_image(img, white_balance=True, apply_dehazing=True, apply_clahe=True, apply_fast_filters_flag=True):

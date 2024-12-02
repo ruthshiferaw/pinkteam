@@ -8,7 +8,7 @@ import time
 import pandas as pd
 from enhancement_helpers import enhance_image
 
-def main(video_path, output_path="Enhanced Videos", optimization_note="", csv_note="", white_balance=True, apply_dehazing=True, apply_clahe=True, apply_fast_filters_flag=True):
+def main(video_path, output_path="Enhanced Videos", optimization_note="", csv_note="", white_balance=False, apply_dehazing=True, apply_clahe=False, apply_fast_filters_flag=False):
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         print(f"Error: Could not open video: {video_path}")
@@ -27,7 +27,7 @@ def main(video_path, output_path="Enhanced Videos", optimization_note="", csv_no
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = cap.get(cv2.CAP_PROP_FPS)
-    writer = cv2.VideoWriter(enhanced_video_path, cv2.VideoWriter_fourcc(*'mp4v'), fps / 3, (frame_width, frame_height))
+    writer = cv2.VideoWriter(enhanced_video_path, cv2.VideoWriter_fourcc(*'mp4v'), fps / 3, (frame_width, frame_height)) #MJPG = .avi, mp4v = .mp4
     
     frame_count = 0
     total_processing_time = 0  # Initialize total processing time
@@ -56,7 +56,7 @@ def main(video_path, output_path="Enhanced Videos", optimization_note="", csv_no
         # if frame_count == 200:
         #     enhanced_image_path = os.path.join(output_path, f"{enhanced_name}.jpg")
         #     cv2.imwrite(enhanced_image_path, current_frame)  # Save the frame as an image file
-        # writer.write(current_frame)
+        writer.write(current_frame)
 
     cap.release()
     writer.release()
@@ -98,7 +98,7 @@ def save_to_csv(video_name, avg_time_per_frame, optimization_note, csv_note):
 if __name__ == "__main__":
     video_path = "Sample Videos/Vision_Test_33s.mp4"  # Replace with your video file path
 
-    main(video_path, optimization_note="final version", csv_note="ruth", apply_fast_filters_flag=False, apply_clahe=False, white_balance=False) #single_downscaled+no_fast_filter+no_clahe+no_white_balance
+    main(video_path, optimization_note="test", csv_note="ruth") #single_downscaled+no_fast_filter+no_clahe+no_white_balance
     #optimization_note indicates modifications: appended to end of video name saved in "Enhanced Videos"
     #csv_note indicates whose pc it's run on, added to "enhanced_video_details.csv"
 
