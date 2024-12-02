@@ -353,8 +353,8 @@ int main()
 //             auto start = std::chrono::high_resolution_clock::now();
 
 //             // Apply enhancement to both frames
-//             enhancedFrame1 = dehazeImage(frame1, 0.5, 15); // Update with appropriate parameters
-//             enhancedFrame2 = dehazeImage(frame2, 0.5, 15);
+//             enhancedFrame1 = dehazeImage(frame1, 15, 15, 120, 1e-4, 0.1); // Update with appropriate parameters
+//             enhancedFrame2 = dehazeImage(frame2, 15, 15, 120, 1e-4, 0.1);
 
 //             auto end = std::chrono::high_resolution_clock::now();
 //             std::chrono::duration<double, std::milli> processingTime = end - start;
@@ -447,7 +447,7 @@ int main()
 //     auto startTime = std::chrono::high_resolution_clock::now();
 
 //     // Dehaze the image
-//     cv::Mat outputImage = dehazeImage(inputImage, 0.5, patchSize);
+//     cv::Mat outputImage = dehazeImage(inputImage, 15, 15, 120, 1e-4, 0.1);
 
 //     // End timer
 //     auto endTime = std::chrono::high_resolution_clock::now();
@@ -527,7 +527,7 @@ int main()
 //             auto start = std::chrono::high_resolution_clock::now();
 
 //             // Apply enhancement (e.g., dehaze or any other image processing)
-//             enhancedFrame = dehazeImage(frame, 0.5, 15);
+//             enhancedFrame = dehazeImage(frame, 15, 15, 120, 1e-4, 0.1);
 
 //             auto end = std::chrono::high_resolution_clock::now();
 //             std::chrono::duration<double, std::milli> processingTime = end - start;
