@@ -198,231 +198,246 @@ cv::Mat dehazeImage(const cv::Mat &img, int patchSize, int size, int radius, dou
     return result;
 }
 
-// Main Function to process video "Sample Videos\Vision_Test_33s.mp4", works!
-int main()
-{
-    // Input and output video paths
-    std::string inputVideoPath = "C:/Users/Ruth/Documents/GitHub/pinkteam/Sample Videos/Vision_Test_33s.mp4";
-    std::string outputVideoPath = "C:/Users/Ruth/Documents/GitHub/pinkteam/Enhanced Videos/Vision_Test_33s_dehazed.mp4";
+//// Main Function to process video "Sample Videos\Vision_Test_33s.mp4", works!
+//int main()
+//{
+//    // Input and output video paths
+//    std::string inputVideoPath = "C:/Users/Ruth/Documents/GitHub/pinkteam/Sample Videos/Vision_Test_33s.mp4";
+//    std::string outputVideoPath = "C:/Users/Ruth/Documents/GitHub/pinkteam/Enhanced Videos/Vision_Test_33s_dehazed.mp4";
+//
+//
+//    // Open the input video
+//    cv::VideoCapture video(inputVideoPath);
+//    if (!video.isOpened())
+//    {
+//        std::cerr << "Error: Unable to open input video." << std::endl;
+//        return -1;
+//    }
+//
+//    // Get video properties
+//    int fps = video.get(cv::CAP_PROP_FPS);
+//    cv::Size frameSize(
+//        static_cast<int>(video.get(cv::CAP_PROP_FRAME_WIDTH)),
+//        static_cast<int>(video.get(cv::CAP_PROP_FRAME_HEIGHT)));
+//
+//    // Define codec and create VideoWriter
+//    int codec = cv::VideoWriter::fourcc('m', 'p', '4', 'v'); // ('m', 'p', '4', 'v') = .mp4 codec, ('M', 'J', 'P', 'G') = .avi codec
+//    cv::VideoWriter videoWriter(outputVideoPath, codec, fps, frameSize);
+//
+//    if (!videoWriter.isOpened())
+//    {
+//        std::cerr << "Error: Unable to open output video for writing." << std::endl;
+//        return -1;
+//    }
+//
+//    // Process each frame
+//    cv::Mat frame, dehazedFrame;
+//    int frameCount = 0;
+//    while (video.read(frame))
+//    {
+//        if (frame.empty())
+//            break;
+//
+//        // Measure the time taken to enhance frames
+//        auto start = std::chrono::high_resolution_clock::now();
+//
+//        // Apply dehazing
+//        dehazedFrame = dehazeImage(frame, 15, 15, 120, 1e-4, 0.1);
+//
+//        auto end = std::chrono::high_resolution_clock::now();
+//        std::chrono::duration<double, std::milli> processingTime = end - start;
+//        // Print processing time for the frames
+//        std::cout << "Frame " << frameCount++ << " enhancement time: " << processingTime.count() << " ms" << std::endl;
+//
+//        // Write dehazed frame to output video
+//        videoWriter.write(dehazedFrame);
+//    }
+//
+//    std::cout << "Dehazed video saved at: " << outputVideoPath << std::endl;
+//    return 0;
+//}
 
-    // Open the input video
-    cv::VideoCapture video(inputVideoPath);
-    if (!video.isOpened())
-    {
-        std::cerr << "Error: Unable to open input video." << std::endl;
-        return -1;
-    }
+ // Main for two camera processing, correct resizing & borders
+ int main()
+ {
+     // Open external cameras (camera 1 and camera 2)
+     cv::VideoCapture cap1(0); // External camera 1
+     cv::VideoCapture cap2(2); // External camera 2
 
-    // Get video properties
-    int fps = video.get(cv::CAP_PROP_FPS);
-    cv::Size frameSize(
-        static_cast<int>(video.get(cv::CAP_PROP_FRAME_WIDTH)),
-        static_cast<int>(video.get(cv::CAP_PROP_FRAME_HEIGHT)));
+     bool filteringOn = false;
 
-    // Define codec and create VideoWriter
-    int codec = cv::VideoWriter::fourcc('m', 'p', '4', 'v'); // ('m', 'p', '4', 'v') = .mp4 codec, ('M', 'J', 'P', 'G') = .avi codec
-    cv::VideoWriter videoWriter(outputVideoPath, codec, fps, frameSize);
+     if (!cap1.isOpened() || !cap2.isOpened())
+     {
+         std::cerr << "Error: Could not open both external cameras." << std::endl;
+         if (!cap1.isOpened())
+             std::cerr << "Camera 1 failed to open." << std::endl;
+         if (!cap2.isOpened())
+             std::cerr << "Camera 2 failed to open." << std::endl;
+         return -1;
+     }
 
-    if (!videoWriter.isOpened())
-    {
-        std::cerr << "Error: Unable to open output video for writing." << std::endl;
-        return -1;
-    }
+     // Get properties from both cameras
+     int frameWidth1 = static_cast<int>(cap1.get(cv::CAP_PROP_FRAME_WIDTH));
+     int frameHeight1 = static_cast<int>(cap1.get(cv::CAP_PROP_FRAME_HEIGHT));
+     double fps1 = cap1.get(cv::CAP_PROP_FPS);
 
-    // Process each frame
-    cv::Mat frame, dehazedFrame;
-    int frameCount = 0;
-    while (video.read(frame))
-    {
-        if (frame.empty())
-            break;
+     int frameWidth2 = static_cast<int>(cap2.get(cv::CAP_PROP_FRAME_WIDTH));
+     int frameHeight2 = static_cast<int>(cap2.get(cv::CAP_PROP_FRAME_HEIGHT));
+     double fps2 = cap2.get(cv::CAP_PROP_FPS);
 
-        // Measure the time taken to enhance frames
-        auto start = std::chrono::high_resolution_clock::now();
+     if (fps1 == 0 || fps2 == 0)
+     {
+         std::cerr << "Warning: Unable to fetch FPS from one or both cameras, setting default value of 30." << std::endl;
+         fps1 = fps2 = 30; // Default FPS
+     }
 
-        // Apply dehazing
-        dehazedFrame = dehazeImage(frame, 15, 15, 120, 1e-4, 0.1);
+     if (frameWidth1 == 0 || frameHeight1 == 0 || frameWidth2 == 0 || frameHeight2 == 0)
+     {
+         std::cerr << "Error: Invalid properties for one or both cameras." << std::endl;
+         return -1;
+     }
 
-        auto end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double, std::milli> processingTime = end - start;
-        // Print processing time for the frames
-        std::cout << "Frame " << frameCount++ << " enhancement time: " << processingTime.count() << " ms" << std::endl;
+     std::cout << "Camera 1 - Width: " << frameWidth1 << ", Height: " << frameHeight1 << ", FPS: " << fps1 << std::endl;
+     std::cout << "Camera 2 - Width: " << frameWidth2 << ", Height: " << frameHeight2 << ", FPS: " << fps2 << std::endl;
 
-        // Write dehazed frame to output video
-        videoWriter.write(dehazedFrame);
-    }
+     // Create unique filenames with timestamps
+     std::time_t now = std::time(nullptr);
+     std::string timestamp = std::to_string(now);
 
-    std::cout << "Dehazed video saved at: " << outputVideoPath << std::endl;
-    return 0;
-}
+     std::string folderPath = "Enhanced Videos/";
+     std::string rawLeftPath = folderPath + "raw_left_" + timestamp + ".avi";
+     std::string rawRightPath = folderPath + "raw_right_" + timestamp + ".avi";
 
-// // Main for two camera processing, correct resizing & borders
-// int main()
-// {
-//     // Open external cameras (camera 1 and camera 2)
-//     cv::VideoCapture cap1(0); // External camera 1
-//     cv::VideoCapture cap2(2); // External camera 2
+     // Define VideoWriters for raw footage
+     cv::VideoWriter rawLeftWriter(rawLeftPath, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), fps1, cv::Size(frameWidth1, frameHeight1));
+     cv::VideoWriter rawRightWriter(rawRightPath, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), fps2, cv::Size(frameWidth2, frameHeight2));
 
-//     if (!cap1.isOpened() || !cap2.isOpened())
-//     {
-//         std::cerr << "Error: Could not open both external cameras." << std::endl;
-//         if (!cap1.isOpened())
-//             std::cerr << "Camera 1 failed to open." << std::endl;
-//         if (!cap2.isOpened())
-//             std::cerr << "Camera 2 failed to open." << std::endl;
-//         return -1;
-//     }
+     if (!rawLeftWriter.isOpened() || !rawRightWriter.isOpened())
+     {
+         std::cerr << "Error: Could not open one or both raw footage writers." << std::endl;
+         return -1;
+     }
 
-//     // Get properties from both cameras
-//     int frameWidth1 = static_cast<int>(cap1.get(cv::CAP_PROP_FRAME_WIDTH));
-//     int frameHeight1 = static_cast<int>(cap1.get(cv::CAP_PROP_FRAME_HEIGHT));
-//     double fps1 = cap1.get(cv::CAP_PROP_FPS);
+     // Define the codec and create VideoWriter object for combined output
+     std::string outputPath = folderPath + "enhanced_split_screen_output" + timestamp + ".avi"; // Save as .avi for compatibility
+     int combinedWidth = frameWidth1 + frameWidth2;                                             // Combined width for side-by-side display
+     int combinedHeight = std::max(frameHeight1, frameHeight2);
+     double fps = std::min(fps1, fps2); // Use the lower FPS to ensure synchronization
 
-//     int frameWidth2 = static_cast<int>(cap2.get(cv::CAP_PROP_FRAME_WIDTH));
-//     int frameHeight2 = static_cast<int>(cap2.get(cv::CAP_PROP_FRAME_HEIGHT));
-//     double fps2 = cap2.get(cv::CAP_PROP_FPS);
+     cv::VideoWriter writer(outputPath, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), fps, cv::Size(combinedWidth, combinedHeight));
 
-//     if (fps1 == 0 || fps2 == 0)
-//     {
-//         std::cerr << "Warning: Unable to fetch FPS from one or both cameras, setting default value of 30." << std::endl;
-//         fps1 = fps2 = 30; // Default FPS
-//     }
+     if (!writer.isOpened())
+     {
+         std::cerr << "Error: Could not open the output video for writing: " << outputPath << std::endl;
+         return -1;
+     }
 
-//     if (frameWidth1 == 0 || frameHeight1 == 0 || frameWidth2 == 0 || frameHeight2 == 0)
-//     {
-//         std::cerr << "Error: Invalid properties for one or both cameras." << std::endl;
-//         return -1;
-//     }
+     cv::Mat frame1, frame2, enhancedFrame1, enhancedFrame2, combinedFrame;
+     int frameCount = 0;
 
-//     std::cout << "Camera 1 - Width: " << frameWidth1 << ", Height: " << frameHeight1 << ", FPS: " << fps1 << std::endl;
-//     std::cout << "Camera 2 - Width: " << frameWidth2 << ", Height: " << frameHeight2 << ", FPS: " << fps2 << std::endl;
+     while (true)
+     {
+         cap1 >> frame1; // Capture frame from camera 1
+         cap2 >> frame2; // Capture frame from camera 2
 
-//     // Create unique filenames with timestamps
-//     std::time_t now = std::time(nullptr);
-//     std::string timestamp = std::to_string(now);
+         if (frame1.empty() || frame2.empty())
+         {
+             std::cerr << "Warning: Empty frame encountered at frame " << frameCount << std::endl;
+             break;
+         }
 
-//     std::string folderPath = "Enhanced Videos/";
-//     std::string rawLeftPath = folderPath + "raw_left_" + timestamp + ".avi";
-//     std::string rawRightPath = folderPath + "raw_right_" + timestamp + ".avi";
+         // Save raw footage
+         rawLeftWriter.write(frame1);
+         rawRightWriter.write(frame2);
 
-//     // Define VideoWriters for raw footage
-//     cv::VideoWriter rawLeftWriter(rawLeftPath, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), fps1, cv::Size(frameWidth1, frameHeight1));
-//     cv::VideoWriter rawRightWriter(rawRightPath, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), fps2, cv::Size(frameWidth2, frameHeight2));
+         try
+         {
+             // Measure the time taken to enhance both frames
+             auto start = std::chrono::high_resolution_clock::now();
 
-//     if (!rawLeftWriter.isOpened() || !rawRightWriter.isOpened())
-//     {
-//         std::cerr << "Error: Could not open one or both raw footage writers." << std::endl;
-//         return -1;
-//     }
+             if (filteringOn)
+             {
+                 // Apply enhancement to both frames
+                 enhancedFrame1 = dehazeImage(frame1, 15, 15, 120, 1e-4, 0.1); // Update with appropriate parameters
+                 enhancedFrame2 = dehazeImage(frame2, 15, 15, 120, 1e-4, 0.1);
+             }
+             else {
+                 enhancedFrame1 = frame1;
+                 enhancedFrame2 = frame2;
+             }
+             
 
-//     // Define the codec and create VideoWriter object for combined output
-//     std::string outputPath = folderPath + "enhanced_split_screen_output" + timestamp + ".avi"; // Save as .avi for compatibility
-//     int combinedWidth = frameWidth1 + frameWidth2;                                             // Combined width for side-by-side display
-//     int combinedHeight = std::max(frameHeight1, frameHeight2);
-//     double fps = std::min(fps1, fps2); // Use the lower FPS to ensure synchronization
+             auto end = std::chrono::high_resolution_clock::now();
+             std::chrono::duration<double, std::milli> processingTime = end - start;
 
-//     cv::VideoWriter writer(outputPath, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), fps, cv::Size(combinedWidth, combinedHeight));
+             // Print processing time for the frames
+             std::cout << "Frame " << frameCount++ << " enhancement time: " << processingTime.count() << " ms" << std::endl;
 
-//     if (!writer.isOpened())
-//     {
-//         std::cerr << "Error: Could not open the output video for writing: " << outputPath << std::endl;
-//         return -1;
-//     }
+             // Resize both enhanced frames to match dimensions
+             cv::resize(enhancedFrame1, enhancedFrame1, cv::Size(1216, 1216));
+             cv::resize(enhancedFrame2, enhancedFrame2, cv::Size(1216, 1216));
 
-//     cv::Mat frame1, frame2, enhancedFrame1, enhancedFrame2, combinedFrame;
-//     int frameCount = 0;
+             // Add borders to both frames
+             cv::Mat leftSide, rightSide;
+             cv::copyMakeBorder(enhancedFrame1, leftSide, 112, 112, 0, 64, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
+             cv::copyMakeBorder(enhancedFrame2, rightSide, 112, 112, 64, 0, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
 
-//     while (true)
-//     {
-//         cap1 >> frame1; // Capture frame from camera 1
-//         cap2 >> frame2; // Capture frame from camera 2
+             // Concatenate frames side by side
+             cv::hconcat(leftSide, rightSide, combinedFrame);
 
-//         if (frame1.empty() || frame2.empty())
-//         {
-//             std::cerr << "Warning: Empty frame encountered at frame " << frameCount << std::endl;
-//             break;
-//         }
+             // Dynamically resize and display the combined frame
+             int displayWidth = 1280, displayHeight = 720;
+             double scalingFactor = std::min(displayWidth / (double)combinedFrame.cols, displayHeight / (double)combinedFrame.rows);
+             cv::Size newSize(static_cast<int>(combinedFrame.cols * scalingFactor), static_cast<int>(combinedFrame.rows * scalingFactor));
 
-//         // Save raw footage
-//         rawLeftWriter.write(frame1);
-//         rawRightWriter.write(frame2);
+             cv::Mat resizedFrame;
+             cv::resize(combinedFrame, resizedFrame, newSize);
 
-//         try
-//         {
-//             // Measure the time taken to enhance both frames
-//             auto start = std::chrono::high_resolution_clock::now();
+             // Dynamically resize and display the combined frame
+             if (combinedFrame.size() != cv::Size(combinedWidth, combinedHeight))
+             {
+                 cv::resize(combinedFrame, combinedFrame, cv::Size(combinedWidth, combinedHeight));
+             }
+             writer.write(combinedFrame);
 
-//             // Apply enhancement to both frames
-//             enhancedFrame1 = dehazeImage(frame1, 15, 15, 120, 1e-4, 0.1); // Update with appropriate parameters
-//             enhancedFrame2 = dehazeImage(frame2, 15, 15, 120, 1e-4, 0.1);
+             // Display the resized frame
+             cv::imshow("Enhanced Split-Screen Output", resizedFrame);
+             if (cv::waitKey(1) == 'f') // Press q to exit
+                 filteringOn = true;
+             if (cv::waitKey(1) == 'u') // Press q to exit
+                 filteringOn = false;
+             if (cv::waitKey(1) == 'q') // Press q to exit
+                 break;
+         }
+         catch (const cv::Exception &e)
+         {
+             std::cerr << "OpenCV error at frame " << frameCount << ": " << e.what() << std::endl;
+             break;
+         }
+         catch (const std::exception &e)
+         {
+             std::cerr << "Standard exception at frame " << frameCount << ": " << e.what() << std::endl;
+             break;
+         }
+         catch (...)
+         {
+             std::cerr << "Unknown error occurred at frame " << frameCount << std::endl;
+             break;
+         }
+     }
 
-//             auto end = std::chrono::high_resolution_clock::now();
-//             std::chrono::duration<double, std::milli> processingTime = end - start;
+     // Release resources
+     cap1.release();
+     cap2.release();
+     rawLeftWriter.release();
+     rawRightWriter.release();
+     writer.release();
+     cv::destroyAllWindows();
 
-//             // Print processing time for the frames
-//             std::cout << "Frame " << frameCount++ << " enhancement time: " << processingTime.count() << " ms" << std::endl;
-
-//             // Resize both enhanced frames to match dimensions
-//             cv::resize(enhancedFrame1, enhancedFrame1, cv::Size(1216, 1216));
-//             cv::resize(enhancedFrame2, enhancedFrame2, cv::Size(1216, 1216));
-
-//             // Add borders to both frames
-//             cv::Mat leftSide, rightSide;
-//             cv::copyMakeBorder(enhancedFrame1, leftSide, 112, 112, 0, 64, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
-//             cv::copyMakeBorder(enhancedFrame2, rightSide, 112, 112, 64, 0, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
-
-//             // Concatenate frames side by side
-//             cv::hconcat(leftSide, rightSide, combinedFrame);
-
-//             // Dynamically resize and display the combined frame
-//             int displayWidth = 1280, displayHeight = 720;
-//             double scalingFactor = std::min(displayWidth / (double)combinedFrame.cols, displayHeight / (double)combinedFrame.rows);
-//             cv::Size newSize(static_cast<int>(combinedFrame.cols * scalingFactor), static_cast<int>(combinedFrame.rows * scalingFactor));
-
-//             cv::Mat resizedFrame;
-//             cv::resize(combinedFrame, resizedFrame, newSize);
-
-//             // Dynamically resize and display the combined frame
-//             if (combinedFrame.size() != cv::Size(combinedWidth, combinedHeight))
-//             {
-//                 cv::resize(combinedFrame, combinedFrame, cv::Size(combinedWidth, combinedHeight));
-//             }
-//             writer.write(combinedFrame);
-
-//             // Display the resized frame
-//             cv::imshow("Enhanced Split-Screen Output", resizedFrame);
-//             if (cv::waitKey(1) >= 0) // Press any key to exit
-//                 break;
-//         }
-//         catch (const cv::Exception &e)
-//         {
-//             std::cerr << "OpenCV error at frame " << frameCount << ": " << e.what() << std::endl;
-//             break;
-//         }
-//         catch (const std::exception &e)
-//         {
-//             std::cerr << "Standard exception at frame " << frameCount << ": " << e.what() << std::endl;
-//             break;
-//         }
-//         catch (...)
-//         {
-//             std::cerr << "Unknown error occurred at frame " << frameCount << std::endl;
-//             break;
-//         }
-//     }
-
-//     // Release resources
-//     cap1.release();
-//     cap2.release();
-//     rawLeftWriter.release();
-//     rawRightWriter.release();
-//     writer.release();
-//     cv::destroyAllWindows();
-
-//     std::cout << "Raw footage saved as " << rawLeftPath << " and " << rawRightPath << std::endl;
-//     std::cout << "Enhanced split-screen video saved as " << outputPath << std::endl;
-//     return 0;
-// }
+     std::cout << "Raw footage saved as " << rawLeftPath << " and " << rawRightPath << std::endl;
+     std::cout << "Enhanced split-screen video saved as " << outputPath << std::endl;
+     return 0;
+ }
 
 // // Main Function to process image "1.png"
 // int main()
