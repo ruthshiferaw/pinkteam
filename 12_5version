@@ -70,7 +70,7 @@ cv::Mat estimateTransmission(const cv::Mat &src, const cv::Vec3b &A, int size)
                                              pixel[1] / float(A[1]),
                                              pixel[2] / float(A[2])});
 
-            transmission.at<uchar>(i, j) = static_cast<uchar>((1 - 0.9f * darkChannelVal) * 255);
+            transmission.at<uchar>(i, j) = static_cast<uchar>((1 - 0.95f * darkChannelVal) * 255);
         }
     }
     return transmission;
@@ -167,12 +167,6 @@ cv::Mat applyWhiteBalance(const cv::Mat &img)
     channels[1] = channels[1] * (meanGray / meanG);
     channels[2] = channels[2] * (meanGray / meanR);
 
-    // Normalize the channels to ensure they stay within [0, 255] (edited 12/6)
-    for (auto &channel : channels)
-    {
-        cv::normalize(channel, channel, 0, 255, cv::NORM_MINMAX);
-    }
-
     // Merge the channels back into a single image
     cv::Mat balancedImg;
     cv::merge(channels, balancedImg);
@@ -262,310 +256,183 @@ cv::Mat dehazeImage(const cv::Mat &img, int patchSize, int size, int radius, dou
 //     return 0;
 // }
 
-bool toggleEnhancement = false; // State variable to track the toggle
-
-// main function for two cameras
+// Main for two camera processing, correct resizing & borders
 int main()
 {
-    cv::VideoCapture cap1(0); // Camera 1
-    cv::VideoCapture cap2(1); // Camera 2
+    // Open external cameras (camera 1 and camera 2)
+    cv::VideoCapture cap1(0); // External camera 1
+    cv::VideoCapture cap2(2); // External camera 2
 
     if (!cap1.isOpened() || !cap2.isOpened())
     {
-        std::cerr << "Error: Could not open both cameras." << std::endl;
+        std::cerr << "Error: Could not open both external cameras." << std::endl;
+        if (!cap1.isOpened())
+            std::cerr << "Camera 1 failed to open." << std::endl;
+        if (!cap2.isOpened())
+            std::cerr << "Camera 2 failed to open." << std::endl;
         return -1;
     }
 
-    // everything after this can be commented out for finals
+    // Get properties from both cameras
+    int frameWidth1 = static_cast<int>(cap1.get(cv::CAP_PROP_FRAME_WIDTH));
+    int frameHeight1 = static_cast<int>(cap1.get(cv::CAP_PROP_FRAME_HEIGHT));
+    double fps1 = cap1.get(cv::CAP_PROP_FPS);
 
-    // // Get properties from both cameras
-    // int frameWidth1 = static_cast<int>(cap1.get(cv::CAP_PROP_FRAME_WIDTH));
-    // int frameHeight1 = static_cast<int>(cap1.get(cv::CAP_PROP_FRAME_HEIGHT));
-    // double fps1 = cap1.get(cv::CAP_PROP_FPS);
+    int frameWidth2 = static_cast<int>(cap2.get(cv::CAP_PROP_FRAME_WIDTH));
+    int frameHeight2 = static_cast<int>(cap2.get(cv::CAP_PROP_FRAME_HEIGHT));
+    double fps2 = cap2.get(cv::CAP_PROP_FPS);
 
-    // int frameWidth2 = static_cast<int>(cap2.get(cv::CAP_PROP_FRAME_WIDTH));
-    // int frameHeight2 = static_cast<int>(cap2.get(cv::CAP_PROP_FRAME_HEIGHT));
-    // double fps2 = cap2.get(cv::CAP_PROP_FPS);
+    if (fps1 == 0 || fps2 == 0)
+    {
+        std::cerr << "Warning: Unable to fetch FPS from one or both cameras, setting default value of 30." << std::endl;
+        fps1 = fps2 = 30; // Default FPS
+    }
 
-    // if (fps1 == 0 || fps2 == 0)
-    // {
-    //     std::cerr << "Warning: Unable to fetch FPS from one or both cameras, setting default value of 30." << std::endl;
-    //     fps1 = fps2 = 30; // Default FPS
-    // }
+    if (frameWidth1 == 0 || frameHeight1 == 0 || frameWidth2 == 0 || frameHeight2 == 0)
+    {
+        std::cerr << "Error: Invalid properties for one or both cameras." << std::endl;
+        return -1;
+    }
 
-    // if (frameWidth1 == 0 || frameHeight1 == 0 || frameWidth2 == 0 || frameHeight2 == 0)
-    // {
-    //     std::cerr << "Error: Invalid properties for one or both cameras." << std::endl;
-    //     return -1;
-    // }
+    std::cout << "Camera 1 - Width: " << frameWidth1 << ", Height: " << frameHeight1 << ", FPS: " << fps1 << std::endl;
+    std::cout << "Camera 2 - Width: " << frameWidth2 << ", Height: " << frameHeight2 << ", FPS: " << fps2 << std::endl;
 
-    // std::cout << "Camera 1 - Width: " << frameWidth1 << ", Height: " << frameHeight1 << ", FPS: " << fps1 << std::endl;
-    // std::cout << "Camera 2 - Width: " << frameWidth2 << ", Height: " << frameHeight2 << ", FPS: " << fps2 << std::endl;
+    // Create unique filenames with timestamps
+    std::time_t now = std::time(nullptr);
+    std::string timestamp = std::to_string(now);
 
-    // // Create unique filenames with timestamps
-    // std::time_t now = std::time(nullptr);
-    // std::string timestamp = std::to_string(now);
+    std::string folderPath = "Enhanced Videos/";
+    std::string rawLeftPath = folderPath + "raw_left_" + timestamp + ".avi";
+    std::string rawRightPath = folderPath + "raw_right_" + timestamp + ".avi";
 
-    // std::string folderPath = "Enhanced Videos/";
-    // std::string rawLeftPath = folderPath + "raw_left_" + timestamp + ".avi";
-    // std::string rawRightPath = folderPath + "raw_right_" + timestamp + ".avi";
+    // Define VideoWriters for raw footage
+    cv::VideoWriter rawLeftWriter(rawLeftPath, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), fps1, cv::Size(frameWidth1, frameHeight1));
+    cv::VideoWriter rawRightWriter(rawRightPath, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), fps2, cv::Size(frameWidth2, frameHeight2));
 
-    // // Define VideoWriters for raw footage
-    // cv::VideoWriter rawLeftWriter(rawLeftPath, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), fps1, cv::Size(frameWidth1, frameHeight1));
-    // cv::VideoWriter rawRightWriter(rawRightPath, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), fps2, cv::Size(frameWidth2, frameHeight2));
+    if (!rawLeftWriter.isOpened() || !rawRightWriter.isOpened())
+    {
+        std::cerr << "Error: Could not open one or both raw footage writers." << std::endl;
+        return -1;
+    }
 
-    // if (!rawLeftWriter.isOpened() || !rawRightWriter.isOpened())
-    // {
-    //     std::cerr << "Error: Could not open one or both raw footage writers." << std::endl;
-    //     return -1;
-    // }
+    // Define the codec and create VideoWriter object for combined output
+    std::string outputPath = folderPath + "enhanced_split_screen_output" + timestamp + ".avi"; // Save as .avi for compatibility
+    int combinedWidth = frameWidth1 + frameWidth2;                                             // Combined width for side-by-side display
+    int combinedHeight = std::max(frameHeight1, frameHeight2);
+    double fps = std::min(fps1, fps2); // Use the lower FPS to ensure synchronization
 
-    // // Define the codec and create VideoWriter object for combined output
-    // std::string outputPath = folderPath + "enhanced_split_screen_output" + timestamp + ".avi"; // Save as .avi for compatibility
-    // int combinedWidth = frameWidth1 + frameWidth2;                                             // Combined width for side-by-side display
-    // int combinedHeight = std::max(frameHeight1, frameHeight2);
-    // double fps = std::min(fps1, fps2); // Use the lower FPS to ensure synchronization
+    cv::VideoWriter writer(outputPath, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), fps, cv::Size(combinedWidth, combinedHeight));
 
-    // cv::VideoWriter writer(outputPath, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), fps, cv::Size(combinedWidth, combinedHeight));
-
-    // if (!writer.isOpened())
-    // {
-    //     std::cerr << "Error: Could not open the output video for writing: " << outputPath << std::endl;
-    //     return -1;
-    // }
-
-    // commenting out ends here
+    if (!writer.isOpened())
+    {
+        std::cerr << "Error: Could not open the output video for writing: " << outputPath << std::endl;
+        return -1;
+    }
 
     cv::Mat frame1, frame2, enhancedFrame1, enhancedFrame2, combinedFrame;
     int frameCount = 0;
 
     while (true)
     {
-        cap1 >> frame1;
-        cap2 >> frame2;
+        cap1 >> frame1; // Capture frame from camera 1
+        cap2 >> frame2; // Capture frame from camera 2
 
         if (frame1.empty() || frame2.empty())
         {
-            std::cerr << "Empty frame encountered at frame " << frameCount << std::endl;
+            std::cerr << "Warning: Empty frame encountered at frame " << frameCount << std::endl;
             break;
         }
 
-        // // Save raw footage
-        // rawLeftWriter.write(frame1);
-        // rawRightWriter.write(frame2);
+        // Save raw footage
+        rawLeftWriter.write(frame1);
+        rawRightWriter.write(frame2);
 
-        // Measure the time taken to enhance both frames
-        auto start = std::chrono::high_resolution_clock::now();
-
-        if (toggleEnhancement)
+        try
         {
-            enhancedFrame1 = dehazeImage(frame1, 15, 15, 120, 1e-4, 0.1);
-            enhancedFrame2 = dehazeImage(frame2, 15, 15, 120, 1e-4, 0.1);
-
             // Measure the time taken to enhance both frames
+            auto start = std::chrono::high_resolution_clock::now();
+
+            // Apply enhancement to both frames
+            // enhancedFrame1 = dehazeImage(frame1, 15, 15, 120, 1e-4, 0.1); // Update with appropriate parameters
+            // enhancedFrame2 = dehazeImage(frame2, 15, 15, 120, 1e-4, 0.1);
+
+            enhancedFrame1 = frame1;
+            enhancedFrame2 = frame2;
+
             auto end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double, std::milli> processingTime = end - start;
 
             // Print processing time for the frames
             std::cout << "Frame " << frameCount++ << " enhancement time: " << processingTime.count() << " ms" << std::endl;
+
+            // Resize both enhanced frames to match dimensions
+            cv::resize(enhancedFrame1, enhancedFrame1, cv::Size(1216, 1216));
+            cv::resize(enhancedFrame2, enhancedFrame2, cv::Size(1216, 1216));
+
+            // Add borders to both frames
+            cv::Mat leftSide, rightSide;
+            cv::copyMakeBorder(enhancedFrame1, leftSide, 112, 112, 0, 64, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
+            cv::copyMakeBorder(enhancedFrame2, rightSide, 112, 112, 64, 0, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
+
+            // Concatenate frames side by side
+            cv::hconcat(leftSide, rightSide, combinedFrame);
+
+            // Dynamically resize and display the combined frame
+            int displayWidth = 1280, displayHeight = 720;
+            double scalingFactor = std::min(displayWidth / (double)combinedFrame.cols, displayHeight / (double)combinedFrame.rows);
+            cv::Size newSize(static_cast<int>(combinedFrame.cols * scalingFactor), static_cast<int>(combinedFrame.rows * scalingFactor));
+
+            cv::Mat resizedFrame;
+            cv::resize(combinedFrame, resizedFrame, newSize);
+
+            // Dynamically resize and display the combined frame
+            if (combinedFrame.size() != cv::Size(combinedWidth, combinedHeight))
+            {
+                cv::resize(combinedFrame, combinedFrame, cv::Size(combinedWidth, combinedHeight));
+            }
+            writer.write(combinedFrame);
+
+            // Display the resized frame
+            cv::imshow("Enhanced Split-Screen Output", resizedFrame);
+            if (cv::waitKey(1) >= 0) // Press any key to exit
+                break;
         }
-        else
+        catch (const cv::Exception &e)
         {
-            enhancedFrame1 = frame1.clone();
-            enhancedFrame2 = frame2.clone();
-        }
-
-        // Enhance brightness and reduce contrast slightly
-        float alpha = 1.1; // Contrast factor (slightly >1 for increase, <1 for decrease)
-        int beta = 15;     // Brightness increment (positive for brighter, negative for darker)
-
-        cv::convertScaleAbs(enhancedFrame1, enhancedFrame1, alpha, beta);
-        cv::convertScaleAbs(enhancedFrame2, enhancedFrame2, alpha, beta);
-
-        // Resize both enhanced frames to match dimensions
-        cv::resize(enhancedFrame1, enhancedFrame1, cv::Size(1216, 1216));
-        cv::resize(enhancedFrame2, enhancedFrame2, cv::Size(1216, 1216));
-
-        // Add borders to both frames
-        cv::Mat leftSide, rightSide;
-        // cv::copyMakeBorder(enhancedFrame1, leftSide, 112, 112, 0, 64, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
-        // cv::copyMakeBorder(enhancedFrame2, rightSide, 112, 112, 64, 0, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
-
-        // flip 180
-        cv::flip(enhancedFrame1, enhancedFrame1, -1); // Rotates the image 180 degrees.
-        cv::flip(enhancedFrame2, enhancedFrame2, -1); // Rotates the image 180 degrees.
-
-        // // Concatenate frames side by side
-        // cv::hconcat(leftSide, rightSide, combinedFrame);
-
-        // Dynamically resize and display the combined frame
-        int displayWidth = 1280, displayHeight = 720;
-        double scalingFactor = std::min(displayWidth / (double)enhancedFrame1.cols, displayHeight / (double)enhancedFrame1.rows);
-        cv::Size newSize(static_cast<int>(enhancedFrame1.cols * scalingFactor), static_cast<int>(enhancedFrame1.rows * scalingFactor));
-
-        // // Dynamically resize and display the combined frame
-        // int displayWidth = 1280, displayHeight = 720;
-        // double scalingFactor = std::min(displayWidth / (double)combinedFrame.cols, displayHeight / (double)combinedFrame.rows);
-        // cv::Size newSize(static_cast<int>(combinedFrame.cols * scalingFactor), static_cast<int>(combinedFrame.rows * scalingFactor));
-
-        cv::Mat resizedFrame;
-        cv::resize(enhancedFrame1, resizedFrame, newSize);
-        // cv::resize(combinedFrame, resizedFrame, newSize);
-
-        // Calculate the borders to center the resized image
-        int topBorder = (displayHeight - resizedFrame.rows) / 2;
-        int bottomBorder = displayHeight - resizedFrame.rows - topBorder;
-        int leftBorder = (displayWidth - resizedFrame.cols) / 2;
-        int rightBorder = displayWidth - resizedFrame.cols - leftBorder;
-
-        // Add borders to center the resized image
-        cv::copyMakeBorder(resizedFrame, leftSide, topBorder, bottomBorder, leftBorder, rightBorder, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
-
-        cv::namedWindow("Enhanced Split-Screen Output", cv::WINDOW_NORMAL);
-        cv::setWindowProperty("Enhanced Split-Screen Output", cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);
-
-        cv::imshow("Enhanced Split-Screen Output", leftSide);
-
-        int key = cv::waitKey(1); // Wait for key press
-        if (key == 27)            // Escape key to exit
+            std::cerr << "OpenCV error at frame " << frameCount << ": " << e.what() << std::endl;
             break;
-        else if (key == 32) // Space bar to toggle enhancement
-            toggleEnhancement = !toggleEnhancement;
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << "Standard exception at frame " << frameCount << ": " << e.what() << std::endl;
+            break;
+        }
+        catch (...)
+        {
+            std::cerr << "Unknown error occurred at frame " << frameCount << std::endl;
+            break;
+        }
     }
 
+    // Release resources
     cap1.release();
     cap2.release();
+    rawLeftWriter.release();
+    rawRightWriter.release();
+    writer.release();
     cv::destroyAllWindows();
+
+    std::cout << "Raw footage saved as " << rawLeftPath << " and " << rawRightPath << std::endl;
+    std::cout << "Enhanced split-screen video saved as " << outputPath << std::endl;
     return 0;
 }
 
-// // main function for webcam
-// int main()
-// {
-//     // Open the default camera (camera 0)
-//     cv::VideoCapture cap(0); // 0 corresponds to the default webcam
-//     if (!cap.isOpened())
-//     {
-//         std::cerr << "Error: Could not open the webcam." << std::endl;
-//         return -1;
-//     }
-
-//     // Get webcam properties
-//     int frameWidth = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
-//     int frameHeight = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
-//     double fps = cap.get(cv::CAP_PROP_FPS);
-
-//     if (fps == 0)
-//     {
-//         std::cerr << "Warning: Unable to fetch FPS from webcam, setting to default value of 30." << std::endl;
-//         fps = 30; // Default FPS
-//     }
-
-//     if (frameWidth == 0 || frameHeight == 0)
-//     {
-//         std::cerr << "Error: Invalid webcam properties (width: " << frameWidth
-//                   << ", height: " << frameHeight << ")" << std::endl;
-//         return -1;
-//     }
-
-//     std::cout << "Webcam properties - Width: " << frameWidth
-//               << ", Height: " << frameHeight
-//               << ", FPS: " << fps << std::endl;
-
-//     // // Define the codec and create VideoWriter object to save the output
-//     // std::string outputPath = "enhanced_webcam_output.avi"; // Save as .avi for compatibility
-//     // cv::VideoWriter writer(outputPath, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), fps, cv::Size(frameWidth, frameHeight));
-
-//     // if (!writer.isOpened())
-//     // {
-//     //     std::cerr << "Error: Could not open the output video for writing: " << outputPath << std::endl;
-//     //     return -1;
-//     // }
-
-//     cv::Mat frame, flippedFrame, enhancedFrame;
-//     int frameCount = 0;
-
-//     while (true)
-//     {
-//         cap >> frame; // Capture frame from webcam
-//         if (frame.empty())
-//         {
-//             std::cerr << "Warning: Empty frame encountered at frame " << frameCount << std::endl;
-//             break;
-//         }
-
-//         // Flip the frame vertically to correct upside-down orientation
-//         cv::flip(frame, flippedFrame, 0);
-
-//         try
-//         {
-//             if (toggleEnhancement)
-//             {
-//                 // Use the raw frame
-//                 enhancedFrame = flippedFrame.clone();
-//             }
-//             else
-//             {
-//                 // Apply enhancement (e.g., dehaze or any other image processing)
-//                 enhancedFrame = dehazeImage(flippedFrame, 15, 15, 120, 1e-4, 0.2);
-//             }
-
-//             // Enhance brightness and reduce contrast slightly
-//             float alpha = 1.1; // Contrast factor (slightly >1 for increase, <1 for decrease)
-//             int beta = 15;     // Brightness increment (positive for brighter, negative for darker)
-
-//             cv::convertScaleAbs(enhancedFrame, enhancedFrame, alpha, beta);
-
-//             // Print processing time (optional)
-//             std::cout << "Frame " << frameCount++ << " processed." << std::endl;
-
-//             // // Write the enhanced frame to the output video
-//             // writer.write(enhancedFrame);
-
-//             cv::namedWindow("Webcam Output", cv::WINDOW_NORMAL);
-//             cv::setWindowProperty("Webcam Output", cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);
-
-//             // Display the frame
-//             cv::imshow("Webcam Output", enhancedFrame);
-
-//             int key = cv::waitKey(1); // Wait for key press
-//             if (key == 27)            // Escape key to exit
-//                 break;
-//             else if (key == 32) // Space bar to toggle enhancement
-//                 toggleEnhancement = !toggleEnhancement;
-//         }
-//         catch (const cv::Exception &e)
-//         {
-//             std::cerr << "OpenCV error at frame " << frameCount << ": " << e.what() << std::endl;
-//             break;
-//         }
-//         catch (const std::exception &e)
-//         {
-//             std::cerr << "Standard exception at frame " << frameCount << ": " << e.what() << std::endl;
-//             break;
-//         }
-//         catch (...)
-//         {
-//             std::cerr << "Unknown error occurred at frame " << frameCount << std::endl;
-//             break;
-//         }
-//     }
-
-//     // Release resources
-//     cap.release();
-//     // writer.release();
-//     cv::destroyAllWindows();
-
-//     // std::cout << "Enhanced webcam video saved as " << outputPath << std::endl;
-//     return 0;
-// }
-
-// // Main Function to process image
+// // Main Function to process image "1.png"
 // int main()
 // {
 //     // Hard-coded input and output video paths
 //     std::string inputImagePath = "C:/Users/Ruth/Documents/GitHub/pinkteam/Sample Images/1.png";
-//     std::string outputImagePath = "C:/Users/Ruth/Documents/GitHub/pinkteam/Enhanced Videos/dehazed_img5.png";
+//     std::string outputImagePath = "C:/Users/Ruth/Documents/GitHub/pinkteam/Enhanced Videos/enhanced_img1.png";
 
 //     // Load the input image
 //     cv::Mat inputImage = cv::imread(inputImagePath);
@@ -599,5 +466,108 @@ int main()
 
 //     std::cout << "Dehazed image saved at: " << outputImagePath << std::endl;
 
+//     return 0;
+// }
+
+// Main Function to process image while live-streaming from webcam
+// int main()
+// {
+//     // Open the default camera (camera 0)
+//     cv::VideoCapture cap(0); // 0 corresponds to the default webcam
+//     if (!cap.isOpened())
+//     {
+//         std::cerr << "Error: Could not open the webcam." << std::endl;
+//         return -1;
+//     }
+
+//     // Get webcam properties
+//     int frameWidth = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
+//     int frameHeight = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
+//     double fps = cap.get(cv::CAP_PROP_FPS);
+
+//     if (fps == 0)
+//     {
+//         std::cerr << "Warning: Unable to fetch FPS from webcam, setting to default value of 30." << std::endl;
+//         fps = 30; // Default FPS
+//     }
+
+//     if (frameWidth == 0 || frameHeight == 0)
+//     {
+//         std::cerr << "Error: Invalid webcam properties (width: " << frameWidth
+//                   << ", height: " << frameHeight << ")" << std::endl;
+//         return -1;
+//     }
+
+//     std::cout << "Webcam properties - Width: " << frameWidth
+//               << ", Height: " << frameHeight
+//               << ", FPS: " << fps << std::endl;
+
+//     // Define the codec and create VideoWriter object to save the output
+//     std::string outputPath = "enhanced_webcam_output.avi"; // Save as .avi for compatibility
+//     cv::VideoWriter writer(outputPath, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), fps, cv::Size(frameWidth, frameHeight));
+
+//     if (!writer.isOpened())
+//     {
+//         std::cerr << "Error: Could not open the output video for writing: " << outputPath << std::endl;
+//         return -1;
+//     }
+
+//     cv::Mat frame, enhancedFrame;
+//     int frameCount = 0;
+
+//     while (true)
+//     {
+//         cap >> frame; // Capture frame from webcam
+//         if (frame.empty())
+//         {
+//             std::cerr << "Warning: Empty frame encountered at frame " << frameCount << std::endl;
+//             break;
+//         }
+
+//         try
+//         {
+//             // Measure the time taken to enhance the frame
+//             auto start = std::chrono::high_resolution_clock::now();
+
+//             // Apply enhancement (e.g., dehaze or any other image processing)
+//             enhancedFrame = dehazeImage(frame, 15, 15, 120, 1e-4, 0.1);
+
+//             auto end = std::chrono::high_resolution_clock::now();
+//             std::chrono::duration<double, std::milli> processingTime = end - start;
+
+//             // Print processing time for the frame
+//             std::cout << "Frame " << frameCount++ << " enhancement time: " << processingTime.count() << " ms" << std::endl;
+
+//             // Write the enhanced frame to the output video
+//             writer.write(enhancedFrame);
+
+//             // Optional: display the enhanced frame
+//             cv::imshow("Enhanced Webcam Output", enhancedFrame);
+//             if (cv::waitKey(1) >= 0) // Press any key to exit
+//                 break;
+//         }
+//         catch (const cv::Exception &e)
+//         {
+//             std::cerr << "OpenCV error at frame " << frameCount << ": " << e.what() << std::endl;
+//             break;
+//         }
+//         catch (const std::exception &e)
+//         {
+//             std::cerr << "Standard exception at frame " << frameCount << ": " << e.what() << std::endl;
+//             break;
+//         }
+//         catch (...)
+//         {
+//             std::cerr << "Unknown error occurred at frame " << frameCount << std::endl;
+//             break;
+//         }
+//     }
+
+//     // Release resources
+//     cap.release();
+//     writer.release();
+//     cv::destroyAllWindows();
+
+//     std::cout << "Enhanced webcam video saved as " << outputPath << std::endl;
 //     return 0;
 // }

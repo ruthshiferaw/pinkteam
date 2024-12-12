@@ -5,7 +5,7 @@ sys.path.append(r"c:\users\ruth\appdata\local\packages\pythonsoftwarefoundation.
 import cv2
 import numpy as np
 from skimage import exposure, util
-from enhancement_helpers import enhance_image
+from enhancement_helpers import dehaze_image
 
 def calculate_noise_level(img):
     # Convert to grayscale if not already
@@ -59,7 +59,8 @@ def calculate_uiqm(img):
     return colorfulness + contrast + sharpness
 
 image = cv2.imread("Sample Images/1.png")
-enhanced_image, n = enhance_image(image, white_balance=False, apply_dehazing=True, apply_clahe=False, apply_fast_filters_flag=False)
+enhanced_image = cv2.imread("Enhanced Videos/dehazed_img4.png")
+# enhanced_image, n = dehaze_image(image, 15, 15, 120, 1e-4, 0.1)
 haze_free_image = cv2.imread("Sample Images/3.jpg")
 
 print(f"UIQM Score of original image: {custom_clarity_metric(image)/0.8}%")
